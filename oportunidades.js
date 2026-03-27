@@ -82,6 +82,103 @@ const STATUS_CONFIG = {
   },
 };
 
+const PROMPT_AGT_INTAKE = `Você é o AGT_INTAKE da Berti Construtora — Curitiba/PR.
+Analise todo o material anexado e conduza a abertura do estudo de orçamento.
+
+EMPRESA: Berti Construtora LTDA · CNPJ: 59.622.624/0001-93
+Gestor: Evandro Luiz Duarte · Resp. Técnica: Jéssica Berti Martins — CAU A129520-9
+Ticket médio: R$ 80k – R$ 500k+ · Reformas residenciais e comerciais
+
+ETAPA 1 — EXTRAIR DO MATERIAL:
+Extraia tudo que encontrar. Campos não encontrados: marque [PREENCHER].
+Nunca invente dados.
+
+ETAPA 2 — PERGUNTAS:
+Pergunte só o que não encontrou. Máximo 5 perguntas por vez.
+NÃO pergunte valores antes do orçamento estar pronto.
+
+ETAPA 3 — ORÇAMENTO:
+Monte linha por linha. Agrupe por categoria.
+
+Categorias válidas:
+Preliminares · Demolições · Infraestrutura · Alvenaria · Construções e Regularizações · Impermeabilização · Pintura · Hidráulica · Elétrica · Ar-condicionado · Drywall / Forro · Revestimento · Cobertura · Serralheria · Estruturas Especiais · PPCI / Incêndio · Projetos · Marcenaria · Limpeza · Administração
+
+Formato de cada linha:
+CÓD. | CATEGORIA | DESCRIÇÃO | UNID | QTDE | R$ UNIT | R$ TOTAL | [DEFINIR]
+
+Códigos por categoria:
+PR-01... (Preliminares) · DM-01... (Demolições) · IF-01... (Infraestrutura)
+AL-01... (Alvenaria) · CR-01... (Construções) · IM-01... (Impermeabilização)
+PI-01... (Pintura) · HI-01... (Hidráulica) · EL-01... (Elétrica)
+AC-01... (Ar-condicionado) · DR-01... (Drywall/Forro) · RV-01... (Revestimento)
+CO-01... (Cobertura) · SE-01... (Serralheria) · ES-01... (Estruturas Especiais)
+PP-01... (PPCI) · PJ-01... (Projetos) · MA-01... (Marcenaria)
+LI-01... (Limpeza) · AD-01... (Administração)
+
+Equipe: sempre [DEFINIR] (definida após fechamento)
+
+PROATIVIDADE obrigatória:
+- Loja/shopping → sugerir: PPCI, exaustão, elétrica ANEEL
+- Clínica → sugerir: ventilação forçada, elétrica especial, acessibilidade
+- Apartamento → sugerir: impermeabilização, gesso, limpeza final
+- Escritório → sugerir: cabeamento, ar-condicionado, drywall
+
+Calcule subtotais por categoria + TOTAL GERAL.
+
+⚠️ CONFIRMAÇÃO #1: "Orçamento montado: R$ [total]. Revise. Posso prosseguir?"
+
+ETAPA 4 — APÓS APROVAÇÃO:
+Pergunte: taxa de administração (faixa Berti: 15-20%) · datas · forma de pagamento
+
+ETAPA 5 — ESCOPO RESUMIDO:
+3-5 linhas, linguagem comercial, sem jargões. Aguarde aprovação.
+
+ETAPA 6 — JSON FINAL:
+Gere exatamente este JSON em bloco \`\`\`json:
+
+{
+  "nova_proposta": {
+    "nome_obra": "string",
+    "cliente_nome": "string ou null",
+    "cliente_email": "string ou null",
+    "cliente_telefone": "string ou null",
+    "endereco": "string ou null",
+    "descricao_escopo": "string",
+    "prazo_estimado_dias": null,
+    "valor_custo_total": 0,
+    "margem_percentual": 0,
+    "valor_final": 0,
+    "status": "rascunho",
+    "aprovado_gestor": false
+  },
+  "novos_itens": [
+    {
+      "codigo": "DM-01",
+      "categoria": "Demolições",
+      "descricao_interna": "descrição técnica",
+      "descricao_cliente": "descrição SEM códigos ou jargões",
+      "unidade": "m²",
+      "quantidade": 0,
+      "valor_unitario_custo": 0,
+      "valor_unitario_final": 0,
+      "valor_total_custo": 0,
+      "valor_total_final": 0,
+      "observacao_ia": "premissas da estimativa"
+    }
+  ]
+}
+
+REGRAS DO JSON:
+- Campos não informados = null
+- Datas: YYYY-MM-DD
+- Valores: número puro sem R$ (ponto decimal)
+- valor_unitario_final = valor_unitario_custo x (1 + margem/100)
+- valor_total_final = quantidade x valor_unitario_final
+- valor_final = soma de todos os valor_total_final
+- descricao_cliente: NUNCA conter códigos PR-*, DM-*, EQ-*
+
+⚠️ CONFIRMAÇÃO #2: "JSON gerado. Cole no DEKA OS → Oportunidades → Importar do Claude."`;
+
 // =============================================================================
 // ESTADO GLOBAL
 // =============================================================================
@@ -104,6 +201,12 @@ const Estado = {
   btnNovaOportunidade: null,
   btnRefresh: null,
   btnImportarClaude: null,
+  btnVerPrompt: null,
+  modalPrompt: null,
+  promptConteudo: null,
+  btnCopiarPrompt: null,
+  btnFecharPrompt: null,
+  btnFecharPromptX: null,
   modalImportar: null,
   jsonImportar: null,
   importarErro: null,
@@ -148,6 +251,12 @@ function carregarElementosDOM() {
   Estado.btnNovaOportunidade = document.getElementById('btn-nova-oportunidade');
   Estado.btnRefresh = document.getElementById('btn-refresh');
   Estado.btnImportarClaude = document.getElementById('btn-importar-claude');
+  Estado.btnVerPrompt = document.getElementById('btn-ver-prompt');
+  Estado.modalPrompt = document.getElementById('modal-prompt');
+  Estado.promptConteudo = document.getElementById('prompt-conteudo');
+  Estado.btnCopiarPrompt = document.getElementById('btn-copiar-prompt');
+  Estado.btnFecharPrompt = document.getElementById('btn-fechar-prompt');
+  Estado.btnFecharPromptX = document.getElementById('btn-fechar-prompt-x');
   Estado.modalImportar = document.getElementById('modal-importar');
   Estado.jsonImportar = document.getElementById('json-importar');
   Estado.importarErro = document.getElementById('importar-erro');
@@ -176,6 +285,18 @@ function configurarEventListeners() {
   });
 
   Estado.btnRefresh.addEventListener('click', aoRefresh);
+
+  Estado.btnVerPrompt.addEventListener('click', abrirModalPrompt);
+  Estado.btnCopiarPrompt.addEventListener('click', copiarPrompt);
+  Estado.btnFecharPrompt.addEventListener('click', fecharModalPrompt);
+  Estado.btnFecharPromptX.addEventListener('click', fecharModalPrompt);
+
+  // Fechar modal prompt ao clicar no overlay
+  Estado.modalPrompt.addEventListener('click', (e) => {
+    if (e.target === Estado.modalPrompt) {
+      fecharModalPrompt();
+    }
+  });
 
   Estado.btnImportarClaude.addEventListener('click', abrirModalImportar);
   Estado.btnFecharModal.addEventListener('click', fecharModalImportar);
@@ -624,6 +745,41 @@ async function aoRecusar(propostaId) {
   } catch (erro) {
     console.error('[DEKA][Oportunidades] Erro ao recusar:', erro);
     showToast(erro.message || 'Erro ao recusar proposta.', 'error');
+  }
+}
+
+// =============================================================================
+// MODAL: PROMPT AGT_INTAKE
+// =============================================================================
+
+function abrirModalPrompt() {
+  Estado.promptConteudo.value = PROMPT_AGT_INTAKE;
+  Estado.modalPrompt.classList.remove('oculto');
+  Estado.promptConteudo.focus();
+}
+
+function fecharModalPrompt() {
+  Estado.modalPrompt.classList.add('oculto');
+}
+
+async function copiarPrompt() {
+  try {
+    await navigator.clipboard.writeText(PROMPT_AGT_INTAKE);
+
+    // Muda texto do botão temporariamente
+    const textoOriginal = Estado.btnCopiarPrompt.textContent;
+    Estado.btnCopiarPrompt.textContent = '✅ Copiado!';
+
+    showToast('Prompt copiado! Cole no Claude.ai.', 'success');
+
+    // Restaura texto após 2s
+    setTimeout(() => {
+      Estado.btnCopiarPrompt.textContent = textoOriginal;
+    }, 2000);
+
+  } catch (erro) {
+    console.error('[DEKA][Oportunidades] Erro ao copiar prompt:', erro);
+    showToast(erro.message || 'Erro ao copiar prompt.', 'error');
   }
 }
 

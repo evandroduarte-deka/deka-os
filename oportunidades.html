@@ -494,6 +494,7 @@
     <div class="header-nav">
       <button id="btn-nova-oportunidade" class="btn-header primary">＋ Nova Oportunidade</button>
       <button id="btn-importar-claude" class="btn-header">📥 Importar do Claude</button>
+      <button id="btn-ver-prompt" class="btn-header">📋 Prompt IA</button>
       <button id="btn-refresh" class="btn-header">🔄</button>
     </div>
   </div>
@@ -561,6 +562,31 @@
 
     <!-- Lista de Oportunidades -->
     <div id="lista-oportunidades"></div>
+  </div>
+
+  <!-- Modal Prompt AGT_INTAKE -->
+  <div id="modal-prompt" class="modal-overlay oculto">
+    <div class="modal" style="max-width: 700px;">
+      <div class="modal-header">
+        <div>
+          <div class="modal-titulo">Prompt AGT_INTAKE — Cole no Claude.ai</div>
+          <div class="modal-subtitulo">Anexe os PDFs do projeto e cole este prompt como primeira mensagem</div>
+        </div>
+        <button class="btn-fechar-modal" id="btn-fechar-prompt-x">×</button>
+      </div>
+      <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
+        <textarea
+          id="prompt-conteudo"
+          class="modal-textarea"
+          readonly
+          style="min-height: 400px; font-family: var(--font-mono); font-size: 12px; line-height: 1.5; background: var(--bg-surface);"
+        ></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-modal btn-modal-secondary" id="btn-fechar-prompt">Fechar</button>
+        <button class="btn-modal btn-modal-primary" id="btn-copiar-prompt">📋 Copiar Prompt</button>
+      </div>
+    </div>
   </div>
 
   <!-- Modal Importar JSON -->
