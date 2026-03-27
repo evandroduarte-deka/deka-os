@@ -1,0 +1,6 @@
+name = "anthropic-proxy"
+main = "cloudflare-worker.js"
+compatibility_date = "2026-03-27"
+
+[vars]
+ALLOWED_ORIGIN = "http://localhost:49397"

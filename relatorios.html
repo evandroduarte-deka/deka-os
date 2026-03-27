@@ -41,6 +41,11 @@
       color: var(--text-primary);
       font-size: 14px;
     }
+    .periodo-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
     .obras-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -121,18 +126,14 @@
 
     <div class="section">
       <div class="section-title">Configuração</div>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+      <div class="periodo-grid">
         <div class="form-group">
-          <label for="data-referencia">Data de Referência</label>
-          <input type="date" id="data-referencia">
+          <label for="data-inicio">Data início</label>
+          <input type="date" id="data-inicio">
         </div>
         <div class="form-group">
-          <label for="periodo-select">Período</label>
-          <select id="periodo-select">
-            <option value="7">Últimos 7 dias</option>
-            <option value="14">Últimos 14 dias</option>
-            <option value="30">Últimos 30 dias</option>
-          </select>
+          <label for="data-fim">Data fim</label>
+          <input type="date" id="data-fim">
         </div>
       </div>
     </div>

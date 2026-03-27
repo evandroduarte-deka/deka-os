@@ -1,0 +1,1628 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DEKA OS — BRAIN / JARVIS</title>
+
+  <!-- Fontes: Syne (display) + IBM Plex Mono (data) + Inter (corpo) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    /* ================================================================
+       DEKA OS v2.0 — brain.html
+       Módulo  : BRAIN / JARVIS — Central Executiva
+       Tema    : Escuro (uso prolongado em escritório)
+       Paleta  : Âmbar-ouro sobre carvão profundo
+       Regra   : Zero lógica aqui — toda JS em brain.js
+    ================================================================ */
+
+    /* ---- Reset ---- */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    button { font: inherit; cursor: pointer; border: none; background: none; }
+    a      { color: inherit; text-decoration: none; }
+
+    /* ---- Design Tokens ---- */
+    :root {
+      /* Superfícies */
+      --bg-base:        #07090e;
+      --bg-surface:     #0c0f17;
+      --bg-card:        #10141f;
+      --bg-card-hover:  #151a28;
+      --bg-elevated:    #1a2035;
+
+      /* Bordas */
+      --border:         #191f30;
+      --border-muted:   #141827;
+      --border-active:  #253050;
+
+      /* Texto */
+      --text-primary:   #dde2f0;
+      --text-secondary: #5a6480;
+      --text-muted:     #2e3650;
+      --text-inverse:   #07090e;
+
+      /* Acento: Ambar / Ouro */
+      --accent:         #f5a623;
+      --accent-bright:  #fbbf24;
+      --accent-dim:     rgba(245, 166, 35, 0.10);
+      --accent-border:  rgba(245, 166, 35, 0.22);
+      --accent-glow:    rgba(245, 166, 35, 0.18);
+
+      /* Status */
+      --green:          #22c55e;
+      --green-bg:       rgba(34, 197, 94,  0.10);
+      --green-border:   rgba(34, 197, 94,  0.22);
+      --red:            #ef4444;
+      --red-bg:         rgba(239, 68,  68,  0.10);
+      --red-border:     rgba(239, 68,  68,  0.22);
+      --blue:           #3b82f6;
+      --blue-bg:        rgba(59,  130, 246, 0.10);
+      --blue-border:    rgba(59,  130, 246, 0.22);
+      --purple:         #a78bfa;
+      --purple-bg:      rgba(167, 139, 250, 0.10);
+      --purple-border:  rgba(167, 139, 250, 0.22);
+      --gray-bg:        rgba(100, 116, 139, 0.10);
+
+      /* Tipografia */
+      --font-display: 'Syne', sans-serif;
+      --font-mono:    'IBM Plex Mono', monospace;
+      --font-body:    'Inter', sans-serif;
+
+      /* Bordas arredondadas */
+      --r-sm:  4px;
+      --r-md:  8px;
+      --r-lg:  12px;
+      --r-xl:  16px;
+      --r-2xl: 20px;
+
+      /* Transicoes */
+      --ease: cubic-bezier(0.16, 1, 0.3, 1);
+      --dur:  200ms;
+
+      /* Layout */
+      --header-h: 56px;
+      --sidebar-w: 360px;
+    }
+
+    /* ================================================================
+       SCROLLBAR
+    ================================================================ */
+    ::-webkit-scrollbar            { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track      { background: transparent; }
+    ::-webkit-scrollbar-thumb      { background: var(--border-active); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover{ background: var(--accent); }
+
+    /* ================================================================
+       BODY / WRAPPER
+    ================================================================ */
+    body {
+      font-family: var(--font-body);
+      font-size: 14px;
+      background: var(--bg-base);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app-wrapper {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ================================================================
+       TOAST CONTAINER (injetado pelo deka.js)
+    ================================================================ */
+    #toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    /* ================================================================
+       HEADER
+    ================================================================ */
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      height: var(--header-h);
+      background: rgba(7, 9, 14, 0.90);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-inner {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      flex-shrink: 0;
+    }
+
+    .logo-mark {
+      width: 30px;
+      height: 30px;
+      background: var(--accent);
+      border-radius: var(--r-md);
+      display: grid;
+      place-items: center;
+    }
+
+    .logo-mark svg { display: block; }
+
+    .logo-name {
+      font-family: var(--font-display);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: var(--text-primary);
+    }
+
+    .logo-name em {
+      font-style: normal;
+      color: var(--accent);
+    }
+
+    .hdiv {
+      width: 1px;
+      height: 18px;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+
+    .module-badge {
+      font-family: var(--font-display);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-border);
+      border-radius: var(--r-sm);
+      padding: 3px 8px;
+      flex-shrink: 0;
+    }
+
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      margin-left: 8px;
+    }
+
+    .nav-tab {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: var(--r-md);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+      white-space: nowrap;
+    }
+
+    .nav-tab:hover   { background: var(--bg-card); color: var(--text-primary); }
+    .nav-tab.active  { background: var(--accent-dim); color: var(--accent); }
+
+    .header-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .conn-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .conn-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      transition: background var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+    }
+    .conn-dot.online  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .conn-dot.loading { background: var(--accent); animation: blink 1s ease-in-out infinite; }
+    .conn-dot.error   { background: var(--red); }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.25; }
+    }
+
+    #sync-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .btn-icon {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border-radius: var(--r-md);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      transition: all var(--dur) var(--ease);
+    }
+
+    .btn-icon:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    .btn-icon.spinning svg { animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ================================================================
+       MAIN GRID
+    ================================================================ */
+    .app-body {
+      flex: 1;
+      max-width: 1600px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 1fr var(--sidebar-w);
+      grid-template-rows: auto auto 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    /* ================================================================
+       SECAO 1 — JARVIS (full-width)
+    ================================================================ */
+    #sec-jarvis {
+      grid-column: 1 / -1;
+    }
+
+    .jarvis-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-2xl);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .jarvis-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), transparent 70%);
+    }
+
+    .jarvis-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 18px 24px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .jarvis-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-border);
+      border-radius: var(--r-lg);
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .jarvis-title-group { flex: 1; }
+
+    .jarvis-title {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-primary);
+    }
+
+    .jarvis-subtitle {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 1px;
+    }
+
+    #jarvis-semana-ref {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--accent);
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-border);
+      border-radius: var(--r-sm);
+      padding: 3px 8px;
+    }
+
+    .btn-gerar-briefing {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 16px;
+      background: var(--accent);
+      color: var(--text-inverse);
+      border-radius: var(--r-md);
+      font-size: 13px;
+      font-weight: 600;
+      transition: background var(--dur) var(--ease), transform var(--dur) var(--ease);
+    }
+
+    .btn-gerar-briefing:hover { background: var(--accent-bright); transform: translateY(-1px); }
+    .btn-gerar-briefing:active { transform: translateY(0); }
+    .btn-gerar-briefing:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .jarvis-body {
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+    }
+
+    .jarvis-resumo { grid-column: 1 / 3; }
+
+    .jarvis-field-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    #jarvis-resumo-texto {
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--text-primary);
+    }
+
+    .jarvis-acoes { grid-column: 3; }
+
+    #jarvis-acoes-lista {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    #jarvis-acoes-lista li {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      padding: 8px 10px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-muted);
+      border-radius: var(--r-md);
+      transition: border-color var(--dur) var(--ease);
+    }
+
+    #jarvis-acoes-lista li:hover { border-color: var(--accent-border); }
+
+    #jarvis-acoes-lista li::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+      margin-top: 6px;
+    }
+
+    .jarvis-footer {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-top: 1px solid var(--border);
+      background: var(--bg-surface);
+      flex-wrap: wrap;
+    }
+
+    .jarvis-footer-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.10em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    #jarvis-topicos-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    .chip {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 8px;
+      border-radius: 20px;
+      background: var(--bg-elevated);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    /* ================================================================
+       EMPTY STATE / SKELETON
+    ================================================================ */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 40px 24px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .empty-state svg { opacity: 0.3; }
+    .empty-state p { font-size: 13px; }
+
+    .skeleton {
+      background: linear-gradient(
+        90deg,
+        var(--border) 25%,
+        var(--border-active) 50%,
+        var(--border) 75%
+      );
+      background-size: 200% 100%;
+      animation: shimmer 1.4s ease-in-out infinite;
+      border-radius: var(--r-sm);
+    }
+
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ================================================================
+       SEC CARD GENERICO
+    ================================================================ */
+    .sec-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-xl);
+      overflow: hidden;
+    }
+
+    .sec-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 13px 18px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sec-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--r-md);
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+
+    .sec-icon.amber  { background: var(--accent-dim);  color: var(--accent); }
+    .sec-icon.green  { background: var(--green-bg);    color: var(--green); }
+    .sec-icon.red    { background: var(--red-bg);      color: var(--red); }
+    .sec-icon.blue   { background: var(--blue-bg);     color: var(--blue); }
+    .sec-icon.purple { background: var(--purple-bg);   color: var(--purple); }
+
+    .sec-title {
+      font-family: var(--font-display);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      flex: 1;
+    }
+
+    .counter-badge {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      min-width: 22px;
+      height: 22px;
+      padding: 0 6px;
+      border-radius: 11px;
+      display: grid;
+      place-items: center;
+    }
+
+    .counter-badge.amber  { background: var(--accent-dim);  color: var(--accent); }
+    .counter-badge.green  { background: var(--green-bg);    color: var(--green); }
+    .counter-badge.red    { background: var(--red-bg);      color: var(--red); }
+    .counter-badge.blue   { background: var(--blue-bg);     color: var(--blue); }
+    .counter-badge.purple { background: var(--purple-bg);   color: var(--purple); }
+
+    /* ================================================================
+       ITEM LIST (Matrix)
+    ================================================================ */
+    .item-list { list-style: none; padding: 0; }
+
+    .data-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border-muted);
+      transition: background var(--dur) var(--ease);
+      cursor: pointer;
+    }
+
+    .data-item:last-child { border-bottom: none; }
+    .data-item:hover      { background: var(--bg-card-hover); }
+
+    .item-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 6px;
+    }
+    .item-dot.amber  { background: var(--accent); }
+    .item-dot.green  { background: var(--green); }
+    .item-dot.red    { background: var(--red); }
+    .item-dot.blue   { background: var(--blue); }
+    .item-dot.purple { background: var(--purple); }
+
+    .item-body { flex: 1; min-width: 0; }
+
+    .item-titulo {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .item-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 3px;
+    }
+
+    .item-ts {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .prio-tag {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: var(--r-sm);
+      letter-spacing: 0.05em;
+    }
+
+    .prio-tag.alta   { background: var(--red-bg);    color: var(--red); }
+    .prio-tag.media  { background: var(--accent-dim); color: var(--accent); }
+    .prio-tag.baixa  { background: var(--gray-bg);   color: var(--text-secondary); }
+
+    .status-pill {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 20px;
+      letter-spacing: 0.04em;
+    }
+
+    .status-pill.pendente  { background: var(--accent-dim); color: var(--accent); }
+    .status-pill.aprovado  { background: var(--green-bg);   color: var(--green); }
+    .status-pill.arquivado { background: var(--gray-bg);    color: var(--text-secondary); }
+
+    .item-actions {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .btn-action {
+      display: grid;
+      place-items: center;
+      width: 26px;
+      height: 26px;
+      border-radius: var(--r-sm);
+      transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+      color: var(--text-muted);
+    }
+
+    .btn-action.approve:hover { background: var(--green-bg); color: var(--green); }
+    .btn-action.archive:hover { background: var(--gray-bg);  color: var(--text-secondary); }
+
+    /* ================================================================
+       PIPELINE KANBAN
+    ================================================================ */
+    .pipeline-board {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--border-muted);
+    }
+
+    .pipeline-col {
+      background: var(--bg-card);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 120px;
+    }
+
+    .pipeline-col-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .pipeline-col-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+    }
+
+    .pipeline-col-label.pendente   { color: var(--accent); }
+    .pipeline-col-label.aprovado   { color: var(--green); }
+    .pipeline-col-label.rejeitado  { color: var(--red); }
+    .pipeline-col-label.respondido { color: var(--blue); }
+
+    .pipeline-count {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .lead-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: 10px 12px;
+      transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+      cursor: pointer;
+    }
+
+    .lead-card:hover { border-color: var(--border-active); background: var(--bg-elevated); }
+
+    .lead-nome {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .lead-score {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 5px;
+    }
+
+    .score-bar {
+      flex: 1;
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .score-fill {
+      height: 100%;
+      border-radius: 2px;
+      background: var(--accent);
+      transition: width 0.5s var(--ease);
+    }
+
+    .score-value {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .lead-preview {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 5px;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      line-height: 1.5;
+    }
+
+    /* ================================================================
+       AGENDA
+    ================================================================ */
+    .agenda-list { list-style: none; padding: 0; }
+
+    .agenda-item {
+      display: flex;
+      gap: 14px;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border-muted);
+      transition: background var(--dur) var(--ease);
+    }
+
+    .agenda-item:last-child { border-bottom: none; }
+    .agenda-item:hover      { background: var(--bg-card-hover); }
+
+    .agenda-time-col {
+      flex-shrink: 0;
+      text-align: right;
+      min-width: 52px;
+    }
+
+    .agenda-hora {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .agenda-data {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .agenda-line {
+      width: 1px;
+      background: var(--border);
+      flex-shrink: 0;
+      border-radius: 1px;
+    }
+
+    .agenda-content { flex: 1; min-width: 0; }
+
+    .agenda-titulo {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .agenda-desc {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    /* ================================================================
+       DUMP IA
+    ================================================================ */
+    .dump-form {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .dump-textarea {
+      width: 100%;
+      min-height: 88px;
+      resize: vertical;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: 10px 12px;
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--text-primary);
+      line-height: 1.5;
+      transition: border-color var(--dur) var(--ease);
+    }
+
+    .dump-textarea::placeholder { color: var(--text-muted); }
+    .dump-textarea:focus { outline: none; border-color: var(--accent-border); background: var(--bg-card-hover); }
+
+    .dump-footer {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dump-tipo-select {
+      flex: 1;
+      height: 32px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: 0 10px;
+      font-family: var(--font-body);
+      font-size: 12px;
+      color: var(--text-primary);
+      appearance: none;
+      -webkit-appearance: none;
+      transition: border-color var(--dur) var(--ease);
+    }
+
+    .dump-tipo-select:focus { outline: none; border-color: var(--accent-border); }
+
+    .btn-dump-enviar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      background: var(--accent);
+      color: var(--text-inverse);
+      border-radius: var(--r-md);
+      font-size: 12px;
+      font-weight: 600;
+      flex-shrink: 0;
+      transition: background var(--dur) var(--ease), transform var(--dur) var(--ease);
+    }
+
+    .btn-dump-enviar:hover  { background: var(--accent-bright); transform: translateY(-1px); }
+    .btn-dump-enviar:active { transform: translateY(0); }
+    .btn-dump-enviar:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .dump-history { max-height: 280px; overflow-y: auto; }
+
+    .dump-entry {
+      padding: 10px 18px;
+      border-bottom: 1px solid var(--border-muted);
+      transition: background var(--dur) var(--ease);
+    }
+
+    .dump-entry:last-child { border-bottom: none; }
+    .dump-entry:hover      { background: var(--bg-card-hover); }
+
+    .dump-entry-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .dump-entry-tipo {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .dump-entry-tipo.tarefa          { color: var(--accent); }
+    .dump-entry-tipo.alerta          { color: var(--red); }
+    .dump-entry-tipo.lembrete        { color: var(--blue); }
+    .dump-entry-tipo.briefing_semanal{ color: var(--purple); }
+
+    .dump-entry-ts {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-left: auto;
+    }
+
+    .dump-entry-titulo {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    /* ================================================================
+       MODAL DE APROVACAO DE LEAD
+    ================================================================ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(7, 9, 14, 0.85);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 500;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--dur) var(--ease);
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-active);
+      border-radius: var(--r-2xl);
+      width: 100%;
+      max-width: 540px;
+      overflow: hidden;
+      transform: translateY(12px);
+      transition: transform var(--dur) var(--ease);
+    }
+
+    .modal-overlay.open .modal-box { transform: translateY(0); }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-title {
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      flex: 1;
+    }
+
+    .modal-close {
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border-radius: var(--r-md);
+      color: var(--text-secondary);
+      transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+    }
+
+    .modal-close:hover { background: var(--red-bg); color: var(--red); }
+
+    .modal-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .modal-field-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .modal-field-value {
+      font-size: 13px;
+      color: var(--text-secondary);
+      background: var(--bg-surface);
+      border: 1px solid var(--border-muted);
+      border-radius: var(--r-md);
+      padding: 10px 12px;
+      line-height: 1.55;
+    }
+
+    .modal-resposta-textarea {
+      width: 100%;
+      min-height: 110px;
+      resize: vertical;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: 10px 12px;
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--text-primary);
+      line-height: 1.55;
+      transition: border-color var(--dur) var(--ease);
+    }
+
+    .modal-resposta-textarea::placeholder { color: var(--text-muted); }
+    .modal-resposta-textarea:focus { outline: none; border-color: var(--accent-border); }
+
+    .modal-footer {
+      display: flex;
+      gap: 8px;
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      justify-content: flex-end;
+    }
+
+    .btn-secondary {
+      padding: 8px 16px;
+      border-radius: var(--r-md);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      transition: all var(--dur) var(--ease);
+    }
+    .btn-secondary:hover { border-color: var(--border-active); color: var(--text-primary); }
+
+    .btn-rejeitar {
+      padding: 8px 16px;
+      border-radius: var(--r-md);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--red);
+      background: var(--red-bg);
+      border: 1px solid var(--red-border);
+      transition: all var(--dur) var(--ease);
+    }
+    .btn-rejeitar:hover { background: rgba(239,68,68,0.18); }
+
+    .btn-aprovar {
+      padding: 8px 16px;
+      border-radius: var(--r-md);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-inverse);
+      background: var(--accent);
+      transition: all var(--dur) var(--ease);
+    }
+    .btn-aprovar:hover    { background: var(--accent-bright); }
+    .btn-aprovar:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ================================================================
+       FOOTER
+    ================================================================ */
+    .app-footer {
+      border-top: 1px solid var(--border);
+      padding: 12px 24px;
+      background: var(--bg-surface);
+    }
+
+    .footer-inner {
+      max-width: 1600px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .footer-brand {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .footer-brand em { font-style: normal; color: var(--accent); }
+
+    .footer-version {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    /* ================================================================
+       LAYOUT: COL MAIN + COL SIDE
+    ================================================================ */
+    .col-main {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      min-width: 0;
+    }
+
+    .col-side {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* ================================================================
+       RESPONSIVIDADE
+    ================================================================ */
+    @media (max-width: 1200px) {
+      .app-body {
+        grid-template-columns: 1fr;
+      }
+
+      #sec-jarvis { grid-column: 1; }
+
+      .jarvis-body {
+        grid-template-columns: 1fr;
+      }
+
+      .jarvis-resumo { grid-column: 1; }
+      .jarvis-acoes  { grid-column: 1; }
+
+      .pipeline-board { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 768px) {
+      .app-body   { padding: 12px; gap: 12px; }
+      .header-nav { display: none; }
+      .jarvis-body{ padding: 16px; gap: 12px; }
+      .pipeline-board { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ============================================================
+       MODAL — Aprovacao de Lead
+  ============================================================ -->
+  <div
+    id="modal-aprovacao"
+    class="modal-overlay"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Aprovacao de Lead"
+    aria-hidden="true"
+  >
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="sec-icon amber">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+        </div>
+        <span class="modal-title">Aprovar Resposta ao Lead</span>
+        <button class="modal-close" id="modal-close-btn" aria-label="Fechar modal">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6"  y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div>
+          <p class="modal-field-label">Contato</p>
+          <p class="modal-field-value" id="modal-contato">—</p>
+        </div>
+        <div>
+          <p class="modal-field-label">Mensagem Original</p>
+          <p class="modal-field-value" id="modal-mensagem">—</p>
+        </div>
+        <div>
+          <p class="modal-field-label">Analise da IA — Score e Categoria</p>
+          <p class="modal-field-value" id="modal-analise">—</p>
+        </div>
+        <div>
+          <p class="modal-field-label">Resposta Sugerida — Edite antes de aprovar</p>
+          <textarea
+            id="modal-resposta"
+            class="modal-resposta-textarea"
+            placeholder="A resposta sugerida aparecera aqui..."
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" id="modal-cancel-btn">Cancelar</button>
+        <button class="btn-rejeitar"  id="modal-rejeitar-btn">Rejeitar</button>
+        <button class="btn-aprovar"   id="modal-aprovar-btn">Aprovar e Enviar</button>
+      </div>
+    </div>
+  </div><!-- /modal-aprovacao -->
+
+  <!-- ============================================================
+       APP WRAPPER
+  ============================================================ -->
+  <div class="app-wrapper">
+
+    <!-- =========================================================
+         HEADER
+    ========================================================= -->
+    <header class="app-header">
+      <div class="header-inner">
+
+        <a href="#" class="logo" aria-label="DEKA OS">
+          <div class="logo-mark">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#07090e" stroke-width="2.8">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+          </div>
+          <span class="logo-name">DEKA <em>OS</em></span>
+        </a>
+
+        <div class="hdiv"></div>
+        <span class="module-badge">BRAIN · JARVIS</span>
+
+        <nav class="header-nav" aria-label="Secoes do Brain">
+          <a href="#sec-jarvis"   class="nav-tab active">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            JARVIS
+          </a>
+          <a href="#sec-matrix" class="nav-tab">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+              <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+            </svg>
+            Matrix
+          </a>
+          <a href="#sec-pipeline" class="nav-tab">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="8"  y1="6"  x2="21" y2="6"/>
+              <line x1="8"  y1="12" x2="21" y2="12"/>
+              <line x1="8"  y1="18" x2="21" y2="18"/>
+              <line x1="3"  y1="6"  x2="3.01" y2="6"/>
+              <line x1="3"  y1="12" x2="3.01" y2="12"/>
+              <line x1="3"  y1="18" x2="3.01" y2="18"/>
+            </svg>
+            Pipeline
+          </a>
+          <a href="#sec-agenda" class="nav-tab">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8"  y1="2" x2="8"  y2="6"/>
+              <line x1="3"  y1="10" x2="21" y2="10"/>
+            </svg>
+            Agenda
+          </a>
+          <a href="#sec-dump" class="nav-tab">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            Dump IA
+          </a>
+        </nav>
+
+        <div class="header-right">
+          <div class="conn-indicator" aria-live="polite">
+            <div class="conn-dot" id="conn-dot"></div>
+            <span id="sync-label">aguardando...</span>
+          </div>
+          <button class="btn-icon" id="btn-refresh" aria-label="Atualizar dados" title="Atualizar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M23 4v6h-6"/>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+          </button>
+        </div>
+
+      </div>
+    </header><!-- /header -->
+
+    <!-- =========================================================
+         MAIN
+    ========================================================= -->
+    <main class="app-body" id="main-body">
+
+      <!-- =====================================================
+           SECAO 1 — JARVIS (full-width)
+      ===================================================== -->
+      <section id="sec-jarvis" aria-label="JARVIS — Briefing Executivo">
+        <div class="jarvis-card">
+
+          <div class="jarvis-header">
+            <div class="jarvis-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+              </svg>
+            </div>
+            <div class="jarvis-title-group">
+              <p class="jarvis-title">JARVIS — Briefing Executivo</p>
+              <p class="jarvis-subtitle">Consolidacao semanal de obras, leads e alertas</p>
+            </div>
+            <span id="jarvis-semana-ref">—</span>
+            <button class="btn-gerar-briefing" id="btn-gerar-briefing" aria-label="Gerar briefing semanal com IA">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+              </svg>
+              Gerar Briefing
+            </button>
+          </div>
+
+          <div class="jarvis-body" id="jarvis-body-content">
+            <div class="jarvis-resumo">
+              <p class="jarvis-field-label">Resumo Executivo</p>
+              <div id="jarvis-resumo-texto">
+                <div class="empty-state">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                  </svg>
+                  <p>Nenhum briefing disponivel.<br/>Clique em "Gerar Briefing" para criar o resumo semanal.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="jarvis-acoes">
+              <p class="jarvis-field-label">Acoes Recomendadas</p>
+              <ul id="jarvis-acoes-lista"></ul>
+            </div>
+          </div>
+
+          <div class="jarvis-footer">
+            <span class="jarvis-footer-label">Topicos</span>
+            <div id="jarvis-topicos-chips"></div>
+          </div>
+
+        </div>
+      </section><!-- /sec-jarvis -->
+
+      <!-- =====================================================
+           COLUNA ESQUERDA — Matrix + Pipeline
+      ===================================================== -->
+      <div class="col-main">
+
+        <!-- =================================================
+             SECAO 2 — MATRIX
+             Tipos: tarefa | briefing_semanal | alerta | lembrete
+        ================================================= -->
+        <section id="sec-matrix" aria-label="Matrix — Itens do Brain">
+
+          <!-- Tarefas -->
+          <div class="sec-card" style="margin-bottom:12px">
+            <div class="sec-card-header">
+              <div class="sec-icon amber">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <polyline points="9 11 12 14 22 4"/>
+                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                </svg>
+              </div>
+              <span class="sec-title" style="color:var(--accent)">Tarefas</span>
+              <span class="counter-badge amber" id="count-tarefas">0</span>
+            </div>
+            <ul class="item-list" id="list-tarefas" aria-label="Lista de tarefas">
+              <li><div class="empty-state" style="padding:24px"><p>Nenhuma tarefa pendente.</p></div></li>
+            </ul>
+          </div>
+
+          <!-- Briefings -->
+          <div class="sec-card" style="margin-bottom:12px">
+            <div class="sec-card-header">
+              <div class="sec-icon purple">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+              </div>
+              <span class="sec-title" style="color:var(--purple)">Briefings</span>
+              <span class="counter-badge purple" id="count-briefings">0</span>
+            </div>
+            <ul class="item-list" id="list-briefings" aria-label="Lista de briefings">
+              <li><div class="empty-state" style="padding:24px"><p>Nenhum briefing registrado.</p></div></li>
+            </ul>
+          </div>
+
+          <!-- Alertas -->
+          <div class="sec-card" style="margin-bottom:12px">
+            <div class="sec-card-header">
+              <div class="sec-icon red">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                  <line x1="12" y1="9"  x2="12"    y2="13"/>
+                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+              </div>
+              <span class="sec-title" style="color:var(--red)">Alertas</span>
+              <span class="counter-badge red" id="count-alertas">0</span>
+            </div>
+            <ul class="item-list" id="list-alertas" aria-label="Lista de alertas">
+              <li><div class="empty-state" style="padding:24px"><p>Nenhum alerta ativo.</p></div></li>
+            </ul>
+          </div>
+
+          <!-- Lembretes -->
+          <div class="sec-card">
+            <div class="sec-card-header">
+              <div class="sec-icon blue">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+              </div>
+              <span class="sec-title" style="color:var(--blue)">Lembretes</span>
+              <span class="counter-badge blue" id="count-lembretes">0</span>
+            </div>
+            <ul class="item-list" id="list-lembretes" aria-label="Lista de lembretes">
+              <li><div class="empty-state" style="padding:24px"><p>Nenhum lembrete cadastrado.</p></div></li>
+            </ul>
+          </div>
+
+        </section><!-- /sec-matrix -->
+
+        <!-- =================================================
+             SECAO 3 — PIPELINE COMERCIAL
+        ================================================= -->
+        <section id="sec-pipeline" class="sec-card" aria-label="Pipeline Comercial">
+          <div class="sec-card-header">
+            <div class="sec-icon green">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <line x1="8"  y1="6"  x2="21" y2="6"/>
+                <line x1="8"  y1="12" x2="21" y2="12"/>
+                <line x1="8"  y1="18" x2="21" y2="18"/>
+                <line x1="3"  y1="6"  x2="3.01" y2="6"/>
+                <line x1="3"  y1="12" x2="3.01" y2="12"/>
+                <line x1="3"  y1="18" x2="3.01" y2="18"/>
+              </svg>
+            </div>
+            <span class="sec-title" style="color:var(--green)">Pipeline Comercial</span>
+            <span class="counter-badge green" id="count-leads">0</span>
+          </div>
+
+          <div class="pipeline-board" id="pipeline-board" role="region" aria-label="Kanban de leads">
+            <div class="pipeline-col" id="pipeline-pendente">
+              <div class="pipeline-col-header">
+                <span class="pipeline-col-label pendente">Pendente</span>
+                <span class="pipeline-count" id="cnt-pendente">0</span>
+              </div>
+              <!-- leads injetados pelo brain.js -->
+            </div>
+            <div class="pipeline-col" id="pipeline-aprovado">
+              <div class="pipeline-col-header">
+                <span class="pipeline-col-label aprovado">Aprovado</span>
+                <span class="pipeline-count" id="cnt-aprovado">0</span>
+              </div>
+            </div>
+            <div class="pipeline-col" id="pipeline-rejeitado">
+              <div class="pipeline-col-header">
+                <span class="pipeline-col-label rejeitado">Rejeitado</span>
+                <span class="pipeline-count" id="cnt-rejeitado">0</span>
+              </div>
+            </div>
+            <div class="pipeline-col" id="pipeline-respondido">
+              <div class="pipeline-col-header">
+                <span class="pipeline-col-label respondido">Respondido</span>
+                <span class="pipeline-count" id="cnt-respondido">0</span>
+              </div>
+            </div>
+          </div>
+        </section><!-- /sec-pipeline -->
+
+      </div><!-- /col-main -->
+
+      <!-- =====================================================
+           COLUNA DIREITA — Agenda + Dump IA
+      ===================================================== -->
+      <div class="col-side">
+
+        <!-- =================================================
+             SECAO 4 — AGENDA
+        ================================================= -->
+        <section id="sec-agenda" class="sec-card" aria-label="Agenda">
+          <div class="sec-card-header">
+            <div class="sec-icon amber">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <rect x="3" y="4" width="18" height="18" rx="2"/>
+                <line x1="16" y1="2"  x2="16" y2="6"/>
+                <line x1="8"  y1="2"  x2="8"  y2="6"/>
+                <line x1="3"  y1="10" x2="21" y2="10"/>
+              </svg>
+            </div>
+            <span class="sec-title">Agenda</span>
+            <span class="counter-badge amber" id="count-agenda">0</span>
+          </div>
+          <ul class="agenda-list" id="list-agenda" aria-label="Agenda de compromissos">
+            <li>
+              <div class="empty-state" style="padding:32px 16px">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="3" y="4" width="18" height="18" rx="2"/>
+                  <line x1="16" y1="2"  x2="16" y2="6"/>
+                  <line x1="8"  y1="2"  x2="8"  y2="6"/>
+                  <line x1="3"  y1="10" x2="21" y2="10"/>
+                </svg>
+                <p>Nenhum item na agenda.</p>
+              </div>
+            </li>
+          </ul>
+        </section><!-- /sec-agenda -->
+
+        <!-- =================================================
+             SECAO 5 — DUMP IA
+        ================================================= -->
+        <section id="sec-dump" class="sec-card" aria-label="Dump IA">
+          <div class="sec-card-header">
+            <div class="sec-icon blue">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+            </div>
+            <span class="sec-title">Dump IA</span>
+            <span class="counter-badge blue" id="count-dump">0</span>
+          </div>
+
+          <div class="dump-form">
+            <textarea
+              id="dump-input"
+              class="dump-textarea"
+              placeholder="Jogou uma ideia, tarefa ou alerta? Escreva aqui — a IA classifica automaticamente..."
+              maxlength="1000"
+              aria-label="Entrada de texto para Dump IA"
+            ></textarea>
+            <div class="dump-footer">
+              <select id="dump-tipo-select" class="dump-tipo-select" aria-label="Tipo do item">
+                <option value="tarefa">Tarefa</option>
+                <option value="alerta">Alerta</option>
+                <option value="lembrete">Lembrete</option>
+                <option value="briefing_semanal">Briefing</option>
+              </select>
+              <button id="btn-dump-enviar" class="btn-dump-enviar" aria-label="Salvar item no Brain">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="22" y1="2" x2="11" y2="13"/>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+                Enviar
+              </button>
+            </div>
+          </div>
+
+          <div class="dump-history" id="dump-history" aria-label="Historico de dumps">
+            <div class="empty-state" style="padding:28px 16px">
+              <p>Historico vazio.</p>
+            </div>
+          </div>
+        </section><!-- /sec-dump -->
+
+      </div><!-- /col-side -->
+
+    </main><!-- /main -->
+
+    <!-- =========================================================
+         FOOTER
+    ========================================================= -->
+    <footer class="app-footer">
+      <div class="footer-inner">
+        <span class="footer-brand">DEKA <em>OS</em> v2.0 &mdash; Berti Construtora</span>
+        <span class="footer-version">brain.html &middot; Fase 5 &middot; JARVIS</span>
+      </div>
+    </footer>
+
+  </div><!-- /app-wrapper -->
+
+  <!-- Toast container — gerenciado pelo deka.js -->
+  <div id="toast-container" aria-live="assertive" aria-atomic="true"></div>
+
+  <!-- ============================================================
+       DEPENDENCIAS — ORDEM OBRIGATORIA
+       1. deka.js  — core: Supabase client, showToast, fetchComTimeout, cache
+       2. brain.js — logica do modulo BRAIN/JARVIS (unico DOMContentLoaded)
+  ============================================================ -->
+  <script>
+  window.DEKA_CONFIG = {
+    supabaseUrl:     'https://tdylutdfzgtcfyhynenk.supabase.co',
+    supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkeWx1dGRmemd0Y2Z5aHluZW5rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyODQxMjcsImV4cCI6MjA4ODg2MDEyN30.k44CAV8O8AGhq4lzy-Ms5CF6JsW2fgMqLEegKb4K-pg',
+    workerUrl:       'https://anthropic-proxy.berti-b52.workers.dev',
+    token:           'deka2025@berti#seguro'
+  };
+  </script>
+  <script src="deka.js" type="module"></script>
+  <script src="brain.js" type="module"></script>
+
+</body>
+</html>
