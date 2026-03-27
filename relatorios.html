@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DEKA OS — Relatórios</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    :root {
+      --bg-base: #07090e;
+      --bg-surface: #0c0f17;
+      --bg-card: #10141f;
+      --bg-card-hover: #151a28;
+      --border: #191f30;
+      --text-primary: #dde2f0;
+      --text-secondary: #5a6480;
+      --accent: #3b82f6;
+      --accent-dim: rgba(59, 130, 246, 0.10);
+      --green: #22c55e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg-base);
+      color: var(--text-primary);
+      line-height: 1.5;
+      padding: 24px;
+    }
+    .container { max-width: 1400px; margin: 0 auto; }
+    h1 { font-size: 24px; margin-bottom: 24px; }
+    .section { margin-bottom: 32px; }
+    .section-title { font-size: 16px; margin-bottom: 12px; color: var(--text-secondary); }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 13px; margin-bottom: 6px; color: var(--text-secondary); }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+    .obras-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .obra-card {
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .obra-card:hover { background: var(--bg-card-hover); border-color: var(--accent); }
+    .obra-card.selected { border-color: var(--accent); background: var(--accent-dim); }
+    .obra-nome { font-weight: 600; margin-bottom: 4px; }
+    .obra-cliente { font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; }
+    .obra-progresso { font-size: 12px; color: var(--green); }
+    .chip {
+      display: inline-block;
+      padding: 4px 12px;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent);
+      border-radius: 16px;
+      font-size: 12px;
+      margin-left: 8px;
+    }
+    .btn {
+      padding: 12px 24px;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover { opacity: 0.9; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .steps {
+      display: flex;
+      gap: 16px;
+      margin: 24px 0;
+    }
+    .step {
+      flex: 1;
+      padding: 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      text-align: center;
+      font-size: 13px;
+      opacity: 0.4;
+    }
+    .step.active { opacity: 1; border-color: var(--accent); }
+    .step.done { opacity: 1; border-color: var(--green); background: rgba(34, 197, 94, 0.1); }
+    .preview {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 24px;
+      min-height: 400px;
+    }
+    .preview-meta { font-size: 12px; color: var(--text-secondary); margin-bottom: 16px; }
+    #preview-content { line-height: 1.8; }
+    #preview-content h1 { font-size: 24px; margin: 16px 0; }
+    #preview-content h2 { font-size: 18px; margin: 12px 0; }
+    #preview-content ul { margin-left: 20px; }
+    .actions { display: flex; gap: 12px; margin-top: 16px; }
+    textarea { display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📊 Relatórios ao Cliente</h1>
+
+    <div class="section">
+      <div class="section-title">Configuração</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div class="form-group">
+          <label for="data-referencia">Data de Referência</label>
+          <input type="date" id="data-referencia">
+        </div>
+        <div class="form-group">
+          <label for="periodo-select">Período</label>
+          <select id="periodo-select">
+            <option value="7">Últimos 7 dias</option>
+            <option value="14">Últimos 14 dias</option>
+            <option value="30">Últimos 30 dias</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Selecione a Obra</div>
+      <div class="obras-grid" id="obras-grid"></div>
+      <div>
+        Obra selecionada: <span class="chip" id="obra-selecionada-chip" style="display: none;"></span>
+      </div>
+    </div>
+
+    <div class="section">
+      <button class="btn" id="btn-gerar-relatorio" disabled>✨ Gerar Relatório</button>
+    </div>
+
+    <div class="steps">
+      <div class="step" id="step-1">1. Coleta de dados</div>
+      <div class="step" id="step-2">2. Processamento IA</div>
+      <div class="step" id="step-3">3. Renderização</div>
+      <div class="step" id="step-4">4. Finalizado</div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Preview do Relatório</div>
+      <div class="preview">
+        <div class="preview-meta" id="preview-meta"></div>
+        <div id="preview-content">
+          <p class="empty-preview">O relatório aparecerá aqui.</p>
+        </div>
+      </div>
+      <textarea id="preview-raw"></textarea>
+      <div class="actions">
+        <button class="btn" id="btn-copiar" disabled>📋 Copiar Markdown</button>
+        <button class="btn" id="btn-novo" disabled>🔄 Novo Relatório</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.DEKA_CONFIG = {
+      supabaseUrl:     'https://tdylutdfzgtcfyhynenk.supabase.co',
+      supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkeWx1dGRmemd0Y2Z5aHluZW5rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyODQxMjcsImV4cCI6MjA4ODg2MDEyN30.k44CAV8O8AGhq4lzy-Ms5CF6JsW2fgMqLEegKb4K-pg',
+      workerUrl:       'https://anthropic-proxy.berti-b52.workers.dev',
+      token:           'deka2025@berti#seguro'
+    };
+  </script>
+  <script type="module" src="deka.js"></script>
+  <script type="module">
+    import { init } from './relatorios.js';
+    init();
+  </script>
+</body>
+</html>
