@@ -80,8 +80,19 @@ Dúvidas? Estamos à disposição.
 
 IMPORTANTE:
 - Retorne APENAS o Markdown formatado
-- PROIBIDO usar **, *, ##, ---, _ fora da estrutura acima
+- Use APENAS a estrutura Markdown do template acima. Não adicione formatação extra.
 - Máximo 500 palavras
+
+Se os dados da semana estiverem vazios ou insuficientes para gerar um relatório completo, retorne:
+
+# Atualização Semanal — [Nome da Obra]
+📅 Semana de [data início] a [data fim]
+
+Esta semana nossa equipe trabalhou nos preparativos internos da obra.
+Na próxima atualização, traremos detalhes sobre o andamento dos serviços.
+
+**Avanço geral da obra: [X]%**
+Dúvidas? Estamos à disposição.
 `.trim();
 
 // =============================================================================
@@ -304,11 +315,13 @@ async function gerarRelatorio() {
     showToast('Processando com IA...', 'info');
 
     const contexto = montarContexto(obra, servicos, visitas, pendencias, dataInicioStr, dataFimStr);
-    const relatorioMd = await chamarClaude({
+    const { texto: relatorioMd } = await chamarClaude({
       mensagens: [{ role: 'user', content: contexto }],
       sistemaPrompt: SYSTEM_PROMPT_AGT_RELATORIO,
       modelo: 'claude-haiku-4-5',
       maxTokens: 2048,
+      temperature: 0.3,
+      agente: 'AGT_RELATORIO',
     });
 
     Estado.step2.classList.remove('active');
