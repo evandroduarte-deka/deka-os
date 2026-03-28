@@ -15,6 +15,7 @@
  *   ANTHROPIC_API_KEY   Chave da Anthropic (nunca exposta ao frontend)
  *   OPENAI_API_KEY      Chave da OpenAI / Whisper (nunca exposta ao frontend)
  *   ALLOWED_ORIGIN      Origem permitida (ex: https://berti-construtora.github.io)
+ *   DEKA_KILL_SWITCH    "off" = sistema ativo, "on" = sistema desligado (default: não definida = ativo)
  *
  * REGRAS DEKA OS (TOLERÂNCIA ZERO):
  *   - Nenhum catch silencioso. Todo erro retorna JSON estruturado.
@@ -69,6 +70,54 @@ export default {
     // ── Validação de Token (todas as rotas privadas) ──────────────────────────
     const erroToken = await validarToken(request, env);
     if (erroToken) return erroToken;
+
+    // ── Kill Switch (desligar sistema sem desativar o Worker) ──────────────
+    if (env.DEKA_KILL_SWITCH === 'on') {
+      console.error('[DEKA][KillSwitch] Sistema desligado via DEKA_KILL_SWITCH.');
+      return responderErro(
+        503,
+        'SISTEMA_DESLIGADO',
+        'O DEKA OS está temporariamente desligado pelo gestor. Tente novamente mais tarde.',
+        null,
+        env
+      );
+    }
+
+    // ── Rate Limiting básico (por IP, em memória do isolate) ────────────
+    // Nota: Rate limit por isolate do Workers. Em uso real com volume alto,
+    // migrar para Cloudflare Rate Limiting API ou KV.
+    const RATE_LIMIT_MAX = 60;
+    const RATE_LIMIT_WINDOW_MS = 3_600_000; // 1 hora
+
+    if (!globalThis._rateLimitMap) {
+      globalThis._rateLimitMap = new Map();
+    }
+
+    const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
+    const agora = Date.now();
+    const registro = globalThis._rateLimitMap.get(clientIP) || {
+      count: 0,
+      resetAt: agora + RATE_LIMIT_WINDOW_MS,
+    };
+
+    if (agora > registro.resetAt) {
+      registro.count = 0;
+      registro.resetAt = agora + RATE_LIMIT_WINDOW_MS;
+    }
+
+    registro.count++;
+    globalThis._rateLimitMap.set(clientIP, registro);
+
+    if (registro.count > RATE_LIMIT_MAX) {
+      console.error(`[DEKA][RateLimit] IP ${clientIP} excedeu ${RATE_LIMIT_MAX} chamadas/hora.`);
+      return responderErro(
+        429,
+        'RATE_LIMIT_EXCEDIDO',
+        `Limite de ${RATE_LIMIT_MAX} chamadas por hora excedido. Aguarde.`,
+        { reset_em: new Date(registro.resetAt).toISOString() },
+        env
+      );
+    }
 
     // ── Roteamento ────────────────────────────────────────────────────────────
     try {
@@ -262,6 +311,24 @@ async function rotaAnthropic(request, env) {
       { resposta_anthropic: corpoErro },
       env
     );
+  }
+
+  // Log de métricas de tokens (para rastreamento de custo)
+  try {
+    if (respostaAnthropic.ok) {
+      const bodyParaLog = await respostaAnthropic.clone().json();
+      const usage = bodyParaLog?.usage;
+      if (usage) {
+        console.log(
+          `[DEKA][Worker][Metrics] model=${bodyParaLog.model || 'unknown'} ` +
+          `in=${usage.input_tokens} out=${usage.output_tokens} ` +
+          `cache_read=${usage.cache_read_input_tokens || 0}`
+        );
+      }
+    }
+  } catch (_) {
+    // Log de métricas não deve impedir a resposta — ignorar erro silenciosamente
+    // (esta é a ÚNICA exceção à regra de zero catch silencioso — é log auxiliar)
   }
 
   // Repassa a resposta (incluindo streams) diretamente, adicionando CORS headers
