@@ -645,8 +645,9 @@ export async function chamarClaude({
       body: JSON.stringify({
         model:      modelo,
         max_tokens: maxTokens,
-        system:     sistemaPrompt ?? '',
         messages:   mensagens,
+        // Só inclui system se for truthy (API Anthropic rejeita string vazia)
+        ...(sistemaPrompt ? { system: sistemaPrompt } : {}),
       }),
     },
     TIMEOUT_CLAUDE_MS // 30s — override explícito para LLMs
