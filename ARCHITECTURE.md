@@ -292,6 +292,44 @@ Leads comerciais do WhatsApp (via Evolution API + N8N).
 
 ---
 
+### 3.10 Tabela: `base_servicos`
+Catálogo de serviços padrão da Berti Construtora (Curitiba/PR 2025-2026).
+103 itens em 20 categorias. Fonte de dados para o AGT_ORCAMENTO.
+
+| Campo | Tipo | Descrição | Constraints |
+|---|---|---|---|
+| `id` | uuid | PK, auto-gerado | PRIMARY KEY |
+| `codigo` | text | Código único do serviço (ex: "PR-01", "DM-02") | UNIQUE, NOT NULL |
+| `categoria` | text | Categoria (ex: "Preliminares", "Demolições") | NOT NULL |
+| `descricao_interna` | text | Descrição técnica para o gestor | NOT NULL |
+| `descricao_cliente` | text | Descrição traduzida para o cliente | NOT NULL |
+| `unidade` | text | Unidade de medida (m², m, m³, vb, un, mês, etc.) | NOT NULL |
+| `valor_referencia` | numeric | Valor de referência em R$ | DEFAULT 0 |
+| `valor_min` | numeric | Valor mínimo de mercado em R$ | DEFAULT 0 |
+| `valor_max` | numeric | Valor máximo de mercado em R$ | DEFAULT 0 |
+| `fonte` | text | Fonte do preço (ex: "SINAPI AF_03/2024", "Orç.44-07") | — |
+| `sinapi` | text | Código SINAPI (quando aplicável) | — |
+| `observacoes` | text | Observações e escopo do serviço | — |
+| `equipe_cod` | text | Código da equipe/fornecedor (ex: "EQ-ALV-01") | — |
+| `ativo` | boolean | Se o serviço está ativo no catálogo | DEFAULT true |
+| `created_at` | timestamptz | Timestamp de criação | NOT NULL, DEFAULT now() |
+| `updated_at` | timestamptz | Timestamp de última atualização | NOT NULL, DEFAULT now() |
+
+**Índices:** `idx_base_servicos_codigo`, `idx_base_servicos_categoria`, `idx_base_servicos_ativo`
+**Política RLS:** Leitura pública.
+
+**Constraint de unidade:**
+```sql
+CHECK (unidade = ANY (ARRAY['m²', 'm', 'm³', 'ml', 'un', 'vb', 'h', 'kg', 'pç', 'cx', 'sc', 'l', 'mês']))
+```
+
+**Uso:**
+- AGT_ORCAMENTO consulta esta tabela para gerar propostas comerciais
+- Módulo `orcamento.html` carrega catálogo completo com cache de 60 minutos
+- Catálogo atualizado periodicamente pelo gestor via importação de planilhas
+
+---
+
 ## 4. Categorias de Serviços — 20 Categorias Oficiais
 
 Codificação: `XX-NN` onde XX = código da categoria, NN = número sequencial.

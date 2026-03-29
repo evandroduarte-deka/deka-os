@@ -84,6 +84,10 @@ const Estado = {
   imagens: [], // [{media_type, data}]
   propostaAtual: null,
   leadId: null,
+
+  // Timer de loading
+  timerLoadingInterval: null,
+  timerLoadingSegundos: 0,
 };
 
 // =============================================================================
@@ -112,9 +116,9 @@ function carregarElementosDOM() {
   Estado.btnGerar = document.getElementById('btn-gerar');
   Estado.loading = document.getElementById('orcamento-loading');
   Estado.resultado = document.getElementById('orcamento-resultado');
-  Estado.resultadoNomeObra = document.getElementById('resultado-nome-obra');
-  Estado.resultadoEscopo = document.getElementById('resultado-escopo');
-  Estado.resultadoPrazo = document.getElementById('resultado-prazo');
+  Estado.resultadoNomeObra = document.getElementById('input-nome-obra');
+  Estado.resultadoEscopo = document.getElementById('input-escopo');
+  Estado.resultadoPrazo = document.getElementById('input-prazo');
   Estado.resultadoTotalItens = document.getElementById('resultado-total-itens');
   Estado.resultadoTabelaItens = document.getElementById('resultado-tabela-itens');
   Estado.resultadoCustoTotal = document.getElementById('resultado-custo-total');
@@ -125,6 +129,14 @@ function carregarElementosDOM() {
   Estado.campoEndereco = document.getElementById('campo-endereco');
   Estado.btnAprovar = document.getElementById('btn-aprovar');
   Estado.btnRegerar = document.getElementById('btn-regenerar');
+
+  // Modal adicionar serviço
+  Estado.btnAdicionarServico = document.getElementById('btn-adicionar-servico');
+  Estado.modalAdicionarServico = document.getElementById('modal-adicionar-servico');
+  Estado.modalSelectServico = document.getElementById('modal-select-servico');
+  Estado.modalInputQuantidade = document.getElementById('modal-input-quantidade');
+  Estado.btnConfirmarAdicionar = document.getElementById('btn-confirmar-adicionar');
+  Estado.btnCancelarModal = document.getElementById('btn-cancelar-modal');
 }
 
 function configurarEventListeners() {
@@ -133,6 +145,12 @@ function configurarEventListeners() {
   Estado.btnGerar.addEventListener('click', aoClicarGerar);
   Estado.btnAprovar.addEventListener('click', aoClicarAprovar);
   Estado.btnRegerar.addEventListener('click', aoClicarRegerar);
+
+  // Modal adicionar serviço
+  Estado.btnAdicionarServico.addEventListener('click', aoClicarAdicionarServico);
+  Estado.btnConfirmarAdicionar.addEventListener('click', aoConfirmarAdicionar);
+  Estado.btnCancelarModal.addEventListener('click', aoFecharModal);
+  Estado.modalAdicionarServico.querySelector('.modal-overlay').addEventListener('click', aoFecharModal);
 }
 
 function extrairLeadIdDaURL() {
@@ -162,7 +180,7 @@ async function carregarCatalogo() {
     // Buscar do Supabase
     const { data, error } = await supabase
       .from('base_servicos')
-      .select('id, codigo, categoria, descricao_interna, descricao_cliente, unidade, valor_unitario_custo, ativo')
+      .select('id, codigo, categoria, descricao_interna, descricao_cliente, unidade, valor_referencia, ativo')
       .eq('ativo', true)
       .order('categoria, codigo');
 
@@ -277,6 +295,19 @@ async function aoClicarGerar() {
     Estado.form.classList.add('oculto');
     Estado.loading.classList.remove('oculto');
 
+    // Iniciar timer de loading
+    Estado.timerLoadingSegundos = 0;
+    const loadingTimerEl = document.getElementById('loadingTimer');
+    if (loadingTimerEl) {
+      loadingTimerEl.textContent = '0s';
+    }
+    Estado.timerLoadingInterval = setInterval(() => {
+      Estado.timerLoadingSegundos++;
+      if (loadingTimerEl) {
+        loadingTimerEl.textContent = `${Estado.timerLoadingSegundos}s`;
+      }
+    }, 1000);
+
     // Montar payload
     const links = Estado.campoLinks.value
       .split('\n')
@@ -320,6 +351,9 @@ async function aoClicarGerar() {
 
     const dados = await resposta.json();
 
+    // Parar timer
+    clearInterval(Estado.timerLoadingInterval);
+
     console.log('[DEKA][Orcamento] Proposta gerada:', dados);
     showToast('Proposta gerada com sucesso!', 'success');
 
@@ -327,6 +361,9 @@ async function aoClicarGerar() {
     renderizarResultado(dados.proposta);
 
   } catch (erro) {
+    // Parar timer
+    clearInterval(Estado.timerLoadingInterval);
+
     console.error('[DEKA][Orcamento] Erro ao gerar proposta:', erro);
     showToast(erro.message || 'Erro ao gerar proposta.', 'error');
 
@@ -344,11 +381,27 @@ async function aoClicarGerar() {
 function renderizarResultado(proposta) {
   Estado.propostaAtual = proposta;
 
-  // Preencher cabeçalho
-  Estado.resultadoNomeObra.textContent = proposta.nome_obra || 'Proposta sem nome';
-  Estado.resultadoEscopo.textContent = proposta.descricao_escopo || 'Sem descrição';
-  Estado.resultadoPrazo.textContent = proposta.prazo_estimado_dias || '0';
+  // Preencher cabeçalho com inputs editáveis
+  Estado.resultadoNomeObra.value = proposta.nome_obra || 'Proposta sem nome';
+  Estado.resultadoEscopo.value = proposta.descricao_escopo || 'Sem descrição';
+  Estado.resultadoPrazo.value = proposta.prazo_estimado_dias || 0;
   Estado.resultadoTotalItens.textContent = proposta.itens.length;
+
+  // Event listeners para edição do cabeçalho
+  Estado.resultadoNomeObra.addEventListener('input', (e) => {
+    Estado.propostaAtual.nome_obra = e.target.value;
+  });
+  Estado.resultadoEscopo.addEventListener('input', (e) => {
+    Estado.propostaAtual.descricao_escopo = e.target.value;
+  });
+  Estado.resultadoPrazo.addEventListener('change', (e) => {
+    const prazo = parseInt(e.target.value, 10);
+    if (prazo > 0) {
+      Estado.propostaAtual.prazo_estimado_dias = prazo;
+    } else {
+      e.target.value = Estado.propostaAtual.prazo_estimado_dias;
+    }
+  });
 
   // Preencher campos de cliente (pre-fill com dados da proposta)
   Estado.campoClienteNome.value = proposta.cliente_nome || '';
@@ -380,26 +433,27 @@ function renderizarTabelaItens(itens) {
 
   itens.forEach((item, index) => {
     const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td class="td-servico">${item.descricao_cliente}</td>
-      <td>${item.unidade}</td>
-      <td>
-        <input
-          type="number"
-          class="input-quantidade"
-          data-index="${index}"
-          value="${item.quantidade}"
-          min="0.01"
-          step="0.01"
-        >
-      </td>
-      <td>R$ ${formatarMoeda(item.valor_unitario_final)}</td>
-      <td class="td-total-item">R$ ${formatarMoeda(item.valor_total_final)}</td>
-      <td class="td-obs">${item.observacao_ia || '—'}</td>
-    `;
 
-    // Event listener para edição de quantidade
-    const inputQtd = tr.querySelector('.input-quantidade');
+    // Coluna: Serviço (XSS-safe)
+    const tdServico = document.createElement('td');
+    tdServico.className = 'td-servico';
+    tdServico.textContent = item.descricao_cliente;
+    tr.appendChild(tdServico);
+
+    // Coluna: Unidade (XSS-safe)
+    const tdUnidade = document.createElement('td');
+    tdUnidade.textContent = item.unidade;
+    tr.appendChild(tdUnidade);
+
+    // Coluna: Quantidade (input editável)
+    const tdQtd = document.createElement('td');
+    const inputQtd = document.createElement('input');
+    inputQtd.type = 'number';
+    inputQtd.className = 'input-quantidade';
+    inputQtd.setAttribute('data-index', index);
+    inputQtd.value = item.quantidade;
+    inputQtd.min = '0.01';
+    inputQtd.step = '0.01';
     inputQtd.addEventListener('change', (e) => {
       const novaQtd = parseFloat(e.target.value);
       if (novaQtd > 0) {
@@ -408,6 +462,25 @@ function renderizarTabelaItens(itens) {
         e.target.value = item.quantidade;
       }
     });
+    tdQtd.appendChild(inputQtd);
+    tr.appendChild(tdQtd);
+
+    // Coluna: Valor Unitário (XSS-safe)
+    const tdValorUnit = document.createElement('td');
+    tdValorUnit.textContent = `R$ ${formatarMoeda(item.valor_unitario_final)}`;
+    tr.appendChild(tdValorUnit);
+
+    // Coluna: Total (XSS-safe)
+    const tdTotal = document.createElement('td');
+    tdTotal.className = 'td-total-item';
+    tdTotal.textContent = `R$ ${formatarMoeda(item.valor_total_final)}`;
+    tr.appendChild(tdTotal);
+
+    // Coluna: Observação IA (XSS-safe)
+    const tdObs = document.createElement('td');
+    tdObs.className = 'td-obs';
+    tdObs.textContent = item.observacao_ia || '—';
+    tr.appendChild(tdObs);
 
     Estado.resultadoTabelaItens.appendChild(tr);
   });
@@ -478,20 +551,20 @@ async function aoClicarAprovar() {
     const { data: proposta, error: erroProposta } = await supabase
       .from('propostas')
       .insert({
-        lead_id: Estado.leadId,
         nome_obra: Estado.propostaAtual.nome_obra,
         cliente_nome: clienteNome,
+        cliente_email: null,
         cliente_telefone: null,
-        endereco: endereco,
+        endereco: endereco || null,
         descricao_escopo: Estado.propostaAtual.descricao_escopo,
         prazo_estimado_dias: Estado.propostaAtual.prazo_estimado_dias,
         valor_custo_total: Estado.propostaAtual.valor_custo_total,
         margem_percentual: Number(Estado.campoMargem.value),
         valor_final: Estado.propostaAtual.valor_final,
-        status: 'aguardando_aprovacao',
-        transcricao_raw: Estado.campoBriefing.value,
-        payload_ia: Estado.propostaAtual,
+        status: 'rascunho',
         aprovado_gestor: false,
+        data_envio: null,
+        data_validade: null,
       })
       .select('id')
       .single();
@@ -507,7 +580,6 @@ async function aoClicarAprovar() {
     // 2. INSERT em itens_proposta (bulk insert)
     const itensParaInserir = Estado.propostaAtual.itens.map(item => ({
       proposta_id: propostaId,
-      servico_id: item.servico_id,
       codigo_servico: item.codigo_servico,
       categoria: item.categoria,
       descricao_interna: item.descricao_interna,
@@ -518,7 +590,7 @@ async function aoClicarAprovar() {
       valor_unitario_final: item.valor_unitario_final,
       valor_total_custo: item.valor_total_custo,
       valor_total_final: item.valor_total_final,
-      observacao_ia: item.observacao_ia,
+      observacao_ia: item.observacao_ia || null,
     }));
 
     const { error: erroItens } = await supabase
@@ -531,21 +603,6 @@ async function aoClicarAprovar() {
     }
 
     console.log('[DEKA][Orcamento] Itens salvos:', itensParaInserir.length);
-
-    // 3. UPDATE em brain_comercial (se lead_id existir)
-    if (Estado.leadId) {
-      const { error: erroUpdate } = await supabase
-        .from('brain_comercial')
-        .update({ estagio: 'orcamento' })
-        .eq('id', Estado.leadId);
-
-      if (erroUpdate) {
-        console.error('[DEKA][Orcamento] Erro ao atualizar lead:', erroUpdate);
-        // Não bloqueia o fluxo — apenas loga
-      } else {
-        console.log('[DEKA][Orcamento] Lead atualizado para estágio "orcamento"');
-      }
-    }
 
     showToast('Proposta salva com sucesso! Redirecionando...', 'success');
 
@@ -582,6 +639,111 @@ function aoClicarRegerar() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 
   console.log('[DEKA][Orcamento] Proposta limpa, pronto para regenerar.');
+}
+
+// =============================================================================
+// MODAL ADICIONAR SERVIÇO
+// =============================================================================
+
+function aoClicarAdicionarServico() {
+  if (!Estado.propostaAtual) {
+    showToast('Gere um orçamento primeiro.', 'warning');
+    return;
+  }
+
+  // Popular select com catálogo
+  Estado.modalSelectServico.innerHTML = '<option value="">-- Selecione --</option>';
+
+  Estado.catalogo.forEach(servico => {
+    const option = document.createElement('option');
+    option.value = servico.id;
+    option.textContent = `${servico.codigo} — ${servico.descricao_cliente}`;
+    option.setAttribute('data-codigo', servico.codigo);
+    option.setAttribute('data-categoria', servico.categoria);
+    option.setAttribute('data-descricao-interna', servico.descricao_interna);
+    option.setAttribute('data-descricao-cliente', servico.descricao_cliente);
+    option.setAttribute('data-unidade', servico.unidade);
+    option.setAttribute('data-valor-referencia', servico.valor_referencia);
+    Estado.modalSelectServico.appendChild(option);
+  });
+
+  // Resetar quantidade
+  Estado.modalInputQuantidade.value = '1';
+
+  // Mostrar modal
+  Estado.modalAdicionarServico.classList.remove('oculto');
+
+  console.log('[DEKA][Orcamento] Modal de adicionar serviço aberto.');
+}
+
+function aoFecharModal() {
+  Estado.modalAdicionarServico.classList.add('oculto');
+}
+
+function aoConfirmarAdicionar() {
+  const servicoId = Estado.modalSelectServico.value;
+  const quantidade = parseFloat(Estado.modalInputQuantidade.value);
+
+  // Validação
+  if (!servicoId) {
+    showToast('Selecione um serviço.', 'warning');
+    return;
+  }
+
+  if (!quantidade || quantidade <= 0) {
+    showToast('A quantidade deve ser maior que zero.', 'warning');
+    return;
+  }
+
+  // Pegar dados do serviço selecionado
+  const optionSelecionada = Estado.modalSelectServico.querySelector(`option[value="${servicoId}"]`);
+  const codigo = optionSelecionada.getAttribute('data-codigo');
+  const categoria = optionSelecionada.getAttribute('data-categoria');
+  const descricaoInterna = optionSelecionada.getAttribute('data-descricao-interna');
+  const descricaoCliente = optionSelecionada.getAttribute('data-descricao-cliente');
+  const unidade = optionSelecionada.getAttribute('data-unidade');
+  const valorReferencia = parseFloat(optionSelecionada.getAttribute('data-valor-referencia'));
+
+  // Calcular valores
+  const margem = Number(Estado.campoMargem.value);
+  const valorUnitarioCusto = valorReferencia;
+  const valorUnitarioFinal = valorReferencia * (1 + margem / 100);
+  const valorTotalCusto = quantidade * valorUnitarioCusto;
+  const valorTotalFinal = quantidade * valorUnitarioFinal;
+
+  // Criar novo item
+  const novoItem = {
+    codigo_servico: codigo,
+    categoria: categoria,
+    descricao_interna: descricaoInterna,
+    descricao_cliente: descricaoCliente,
+    unidade: unidade,
+    quantidade: quantidade,
+    valor_unitario_custo: valorUnitarioCusto,
+    valor_unitario_final: valorUnitarioFinal,
+    valor_total_custo: valorTotalCusto,
+    valor_total_final: valorTotalFinal,
+    observacao_ia: 'Adicionado manualmente',
+  };
+
+  // Adicionar ao estado
+  Estado.propostaAtual.itens.push(novoItem);
+
+  // Re-renderizar tabela
+  renderizarTabelaItens(Estado.propostaAtual.itens);
+
+  // Atualizar contador de itens
+  Estado.resultadoTotalItens.textContent = Estado.propostaAtual.itens.length;
+
+  // Recalcular totais
+  atualizarTotais();
+
+  // Fechar modal
+  aoFecharModal();
+
+  showToast('Serviço adicionado com sucesso!', 'success');
+
+  console.log('[DEKA][Orcamento] Serviço adicionado:', novoItem);
 }
 
 // =============================================================================

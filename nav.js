@@ -23,6 +23,7 @@ const MODULOS = [
   { href: './cockpit.html', icone: '🎤', label: 'Cockpit' },
   { href: './brain.html', icone: '🧠', label: 'Brain' },
   { href: './relatorios.html', icone: '📊', label: 'Relatórios' },
+  { href: './orcamento.html', icone: '💰', label: 'Orçamentos IA' },
   { href: './comercial.html', icone: '💬', label: 'Comercial' },
 ];
 
