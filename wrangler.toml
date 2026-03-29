@@ -3,4 +3,5 @@ main = "cloudflare-worker.js"
 compatibility_date = "2026-03-27"
 
 [vars]
-ALLOWED_ORIGIN = "https://berti-design.github.io"
+ALLOWED_ORIGIN = "*"
+DEKA_KILL_SWITCH = "off"
