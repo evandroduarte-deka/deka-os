@@ -97,11 +97,16 @@ function lerConfig() {
     );
   }
 
+  // Token: localStorage tem prioridade sobre o que vier no DEKA_CONFIG
+  // Isso protege contra tokens hardcoded nos HTMLs
+  const tokenStorage = localStorage.getItem('mdo_worker_token') ?? '';
+  const tokenFinal   = tokenStorage || cfg.token || '';
+
   return {
     supabaseUrl:     cfg.supabaseUrl,
     supabaseAnonKey: cfg.supabaseAnonKey,
     workerUrl:       cfg.workerUrl.replace(/\/$/, ''), // remove trailing slash
-    token:           cfg.token,
+    token:           tokenFinal,
   };
 }
 
@@ -727,6 +732,11 @@ export async function chamarClaude({
   }
 
   const inicioMs = Date.now();
+
+  // Aviso se o token está vazio — Worker vai rejeitar a chamada
+  if (!_config.token) {
+    console.warn('[DEKA][chamarClaude] Token vazio. Configure o token em Integrações.');
+  }
 
   const resposta = await fetchComRetry(
     `${WORKER_URL}/v1/messages`,
