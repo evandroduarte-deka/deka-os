@@ -4,581 +4,626 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DEKA OS — Obra</title>
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     button { font: inherit; cursor: pointer; border: none; background: none; }
-    a      { color: inherit; text-decoration: none; }
     input, select, textarea { font: inherit; }
-
-    :root {
-      --bg:       #0d0d0d;
-      --surface:  #1a1a1a;
-      --surface2: #242424;
-      --border:   #2e2e2e;
-      --ouro:     #C8A84B;
-      --ouro-dim: #8a7233;
-      --texto:    #f0f0f0;
-      --texto-2:  #999;
-      --verde:    #22C55E;
-      --amarelo:  #F59E0B;
-      --vermelho: #DC2626;
-    }
 
     body {
       font-family: 'Barlow Condensed', sans-serif;
-      background: var(--bg);
-      color: var(--texto);
+      background: #F0F0F0;
+      color: #1A1A1A;
       min-height: 100vh;
     }
 
-    /* ── TOPBAR ── */
-    .topbar {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
+    /* ── BARRA NAVEGAÇÃO ── */
+    .nav-bar {
+      background: #1A1A1A;
       padding: 0 24px;
       height: 52px;
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 8px;
       position: sticky;
       top: 0;
       z-index: 100;
     }
-    .topbar-logo { display: flex; align-items: baseline; gap: 8px; }
-    .topbar-logo-nome { font-size: 20px; font-weight: 800; letter-spacing: 3px; color: #fff; }
-    .topbar-logo-sub  { font-size: 9px; letter-spacing: 3px; color: var(--ouro); text-transform: uppercase; }
-    .breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--texto-2); }
-    .breadcrumb a { color: var(--texto-2); transition: color 0.15s; }
-    .breadcrumb a:hover { color: var(--ouro); }
-    .breadcrumb-sep { color: var(--border); }
-    .breadcrumb-atual { color: var(--texto); font-weight: 600; }
-    .topbar-spacer { flex: 1; }
-    .btn-primary {
-      padding: 7px 16px; background: var(--ouro); color: #1a1a1a;
-      border-radius: 6px; font-size: 12px; font-weight: 700; letter-spacing: 0.5px;
-      transition: background 0.15s;
-    }
-    .btn-primary:hover { background: #b8953e; }
-    .btn-ghost {
-      padding: 7px 14px; border: 1px solid var(--border); border-radius: 6px;
-      font-size: 12px; color: var(--texto-2); transition: border-color 0.15s, color 0.15s;
-    }
-    .btn-ghost:hover { border-color: var(--ouro-dim); color: var(--texto); }
-
-    /* ── HERO ── */
-    .obra-hero {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-    }
-    .obra-capa {
-      height: 180px;
-      background: var(--surface2);
-      background-size: cover;
-      background-position: center;
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .obra-capa-placeholder { font-size: 48px; opacity: 0.2; }
-    .obra-capa-overlay {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(to top, rgba(13,13,13,0.9) 0%, transparent 60%);
-    }
-    .obra-info {
-      padding: 20px 24px 16px;
-    }
-    .obra-badges { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
-    .badge {
-      padding: 3px 10px; border-radius: 20px; font-size: 10px;
-      font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
-    }
-    .badge-ativa     { background: rgba(34,197,94,0.15);  color: #22C55E; border: 1px solid rgba(34,197,94,0.3); }
-    .badge-pausada   { background: rgba(245,158,11,0.15); color: #F59E0B; border: 1px solid rgba(245,158,11,0.3); }
-    .badge-concluida { background: rgba(99,102,241,0.15); color: #818CF8; border: 1px solid rgba(99,102,241,0.3); }
-    .badge-semana    { background: rgba(200,168,75,0.15); color: var(--ouro); border: 1px solid rgba(200,168,75,0.3); }
-    .obra-nome { font-size: 26px; font-weight: 800; letter-spacing: 1px; color: #fff; line-height: 1.1; }
-    .obra-cliente { font-size: 14px; color: var(--texto-2); margin-top: 4px; }
-    .obra-endereco { font-size: 12px; color: var(--texto-2); margin-top: 2px; }
-    .obra-progresso-wrap { margin-top: 14px; }
-    .obra-progresso-label {
-      display: flex; justify-content: space-between;
-      font-size: 12px; color: var(--texto-2); margin-bottom: 6px;
-    }
-    .obra-progresso-pct { color: var(--ouro); font-weight: 700; font-size: 14px; }
-    .obra-progresso-barra { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
-    .obra-progresso-fill  { height: 100%; background: var(--ouro); border-radius: 2px; transition: width 0.6s ease; }
-    .obra-acoes { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
-
-    /* ── TABS ── */
-    .tabs-bar {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 0 24px;
-      display: flex;
-      gap: 0;
-      position: sticky;
-      top: 52px;
-      z-index: 99;
-    }
-    .tab-btn {
-      padding: 14px 18px;
+    .nav-btn {
+      padding: 7px 18px;
+      border-radius: 4px;
       font-size: 13px;
-      font-weight: 600;
-      color: var(--texto-2);
-      border-bottom: 2px solid transparent;
-      transition: color 0.15s, border-color 0.15s;
-      white-space: nowrap;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      color: #ccc;
+      border: 1px solid #333;
+      background: transparent;
+      transition: border-color 0.15s, color 0.15s;
     }
-    .tab-btn:hover { color: var(--texto); }
-    .tab-btn.ativo { color: var(--ouro); border-bottom-color: var(--ouro); }
+    .nav-btn:hover { border-color: #666; color: #fff; }
+    .nav-btn.ouro  { background: #C8A84B; color: #1A1A1A; border-color: #C8A84B; }
+    .nav-btn.ouro:hover { background: #b8953e; }
+    .nav-spacer { flex: 1; }
+    .nav-semana { font-size: 13px; color: #666; margin: 0 8px; }
+    .nav-semana b { color: #C8A84B; }
 
-    /* ── CONTEÚDO TABS ── */
-    .tab-content { display: none; padding: 24px; }
-    .tab-content.ativo { display: block; }
+    /* ── HEADER ── */
+    .header {
+      background: #1A1A1A;
+      padding: 22px 24px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 24px;
+      align-items: center;
+    }
+    .logo-bloco { border-right: 1px solid #2e2e2e; padding-right: 24px; min-width: 100px; }
+    .logo-nome  { font-size: 32px; font-weight: 800; letter-spacing: 3px; color: #fff; }
+    .logo-sub   { font-size: 9px; letter-spacing: 4px; color: #C8A84B; text-transform: uppercase; margin-top: 2px; }
+    .header-centro {}
+    .header-tag  { font-size: 10px; font-weight: 700; color: #C8A84B; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+    .header-nome { font-size: 22px; font-weight: 700; color: #fff; line-height: 1.2; }
+    .header-end  { font-size: 11px; color: #666; margin-top: 4px; }
+    .header-meta { text-align: right; font-size: 13px; color: #999; line-height: 1.8; white-space: nowrap; }
+    .header-meta b { display: block; font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+
+    /* ── LINHA DOURADA ── */
+    .linha-ouro { height: 2px; background: #C8A84B; }
+
+    /* ── FINANCEIRO ── */
+    .financeiro {
+      background: #1A1A1A;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      border-bottom: 1px solid #2e2e2e;
+    }
+    .fin-item { padding: 14px 18px; border-right: 1px solid #2e2e2e; }
+    .fin-item:last-child { border-right: none; }
+    .fin-label { font-size: 9px; font-weight: 700; color: #666; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; line-height: 1.3; }
+    .fin-valor { font-size: 20px; font-weight: 800; color: #fff; line-height: 1; }
+    .fin-sub   { font-size: 10px; color: #888; margin-top: 4px; }
 
     /* ── KPIs ── */
-    .kpis-grid {
+    .kpis {
+      background: #fff;
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 12px;
-      margin-bottom: 20px;
+      grid-template-columns: repeat(4, 1fr);
+      border-bottom: 1px solid #E5E5E5;
     }
-    .kpi-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px 16px;
-    }
-    .kpi-label { font-size: 10px; font-weight: 700; color: var(--texto-2); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
-    .kpi-valor { font-size: 28px; font-weight: 700; color: #fff; line-height: 1; }
-    .kpi-valor.ouro { color: var(--ouro); }
-    .kpi-valor.verde { color: var(--verde); }
-    .kpi-sub   { font-size: 11px; color: var(--texto-2); margin-top: 4px; }
+    .kpi { padding: 20px 24px; border-right: 1px solid #E5E5E5; }
+    .kpi:last-child { border-right: none; }
+    .kpi-label { font-size: 10px; font-weight: 700; color: #999; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; }
+    .kpi-val   { font-size: 52px; font-weight: 800; color: #1A1A1A; line-height: 1; }
+    .kpi-val.ouro  { color: #C8A84B; }
+    .kpi-data  { font-size: 22px; font-weight: 800; color: #1A1A1A; margin-top: 6px; }
+    .kpi-ok    { font-size: 13px; font-weight: 700; color: #22C55E; margin-top: 6px; }
+    .kpi-alert { font-size: 13px; font-weight: 700; color: #DC2626; margin-top: 6px; }
 
-    /* ── RESUMO FINANCEIRO ── */
-    .resumo-fin {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 16px;
-      margin-bottom: 20px;
+    /* ── TABS ── */
+    .tabs {
+      background: #fff;
+      display: flex;
+      border-bottom: 1px solid #E5E5E5;
+      padding: 0 24px;
     }
-    .resumo-fin-titulo { font-size: 11px; font-weight: 700; color: var(--texto-2); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
-    .resumo-fin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
-    .resumo-item-label { font-size: 11px; color: var(--texto-2); margin-bottom: 3px; }
-    .resumo-item-valor { font-size: 15px; font-weight: 700; color: var(--texto); }
-    .resumo-item-valor.ouro { color: var(--ouro); }
+    .tab-btn {
+      padding: 13px 20px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #999;
+      border-bottom: 3px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+      margin-bottom: -1px;
+    }
+    .tab-btn:hover { color: #1A1A1A; }
+    .tab-btn.ativo { color: #1A1A1A; border-bottom-color: #C8A84B; }
+
+    /* ── CONTEÚDO ── */
+    .tab-content { display: none; }
+    .tab-content.ativo { display: block; }
+    .secao { padding: 22px 24px; background: #fff; margin: 12px; border: 1px solid #E5E5E5; border-radius: 4px; }
+
+    /* ── CABEÇALHO DE SEÇÃO ── */
+    .sec-hdr { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .sec-num  { font-size: 10px; font-weight: 700; color: #C8A84B; letter-spacing: 1px; }
+    .sec-tit  { font-size: 13px; font-weight: 800; color: #1A1A1A; letter-spacing: 1.5px; text-transform: uppercase; }
+    .sec-line { flex: 1; height: 1px; background: #E5E5E5; }
 
     /* ── TABELA SERVIÇOS ── */
-    .tabela-wrap { overflow-x: auto; }
-    .tabela {
-      width: 100%; border-collapse: collapse; font-size: 13px;
-    }
-    .tabela thead tr { background: var(--surface2); }
+    .tabela { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .tabela thead tr { background: #1A1A1A; color: #fff; }
     .tabela thead th {
-      padding: 10px 14px; text-align: left; font-size: 10px;
-      font-weight: 700; letter-spacing: 1px; color: var(--texto-2); text-transform: uppercase;
-      border-bottom: 1px solid var(--border); white-space: nowrap;
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      border-right: 1px solid #2e2e2e;
     }
-    .tabela tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
-    .tabela tbody tr:hover { background: var(--surface2); }
-    .tabela tbody td { padding: 10px 14px; vertical-align: middle; }
-    .tabela-codigo { font-family: monospace; font-size: 11px; color: var(--texto-2); }
-
-    .badge-status {
-      display: inline-block; padding: 2px 8px; border-radius: 4px;
-      font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+    .tabela thead th:last-child { border-right: none; }
+    .tabela tbody tr { border-bottom: 1px solid #E5E5E5; transition: background 0.1s; }
+    .tabela tbody tr:nth-child(even) { background: #F5F5F5; }
+    .tabela tbody tr:hover { background: #f0f7f0; }
+    .tabela tbody td {
+      padding: 10px 14px;
+      vertical-align: middle;
+      border-right: 1px solid #EEEEEE;
     }
-    .s-concluido  { background: rgba(34,197,94,0.15);  color: #22C55E; }
-    .s-andamento  { background: rgba(30,58,95,0.5);    color: #60a5fa; }
-    .s-executar   { background: rgba(46,46,46,0.8);    color: var(--texto-2); }
-    .s-atrasado   { background: rgba(220,38,38,0.15);  color: var(--vermelho); }
+    .tabela tbody td:last-child { border-right: none; }
 
+    /* ── BADGES ── */
+    .badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-concluido { background: #DCFCE7; color: #166534; border: 1px solid #BBF7D0; }
+    .badge-andamento { background: #DBEAFE; color: #1E3A5F; border: 1px solid #BFDBFE; }
+    .badge-executar  { background: #F3F4F6; color: #374151; border: 1px solid #E5E7EB; }
+    .badge-atrasado  { background: #FEE2E2; color: #991B1B; border: 1px solid #FECACA; }
+
+    /* ── BARRA PROGRESSO ── */
     .prog-wrap { display: flex; align-items: center; gap: 8px; }
-    .prog-barra { width: 60px; height: 2px; background: var(--border); border-radius: 1px; }
-    .prog-fill  { height: 100%; background: var(--ouro); border-radius: 1px; }
-    .prog-pct   { font-size: 12px; font-weight: 600; color: var(--ouro); min-width: 32px; }
+    .prog-barra { width: 80px; height: 3px; background: #E5E5E5; border-radius: 2px; }
+    .prog-fill  { height: 100%; background: #1A1A1A; border-radius: 2px; }
+    .prog-pct   { font-size: 13px; font-weight: 700; color: #1A1A1A; }
 
     /* ── GANTT ── */
     .gantt-wrap { overflow-x: auto; }
     .gantt-table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 600px; }
     .gantt-table th {
-      background: var(--surface2); color: var(--texto-2); padding: 7px 6px;
-      text-align: center; font-size: 9px; font-weight: 700; border-bottom: 1px solid var(--border);
-      white-space: nowrap;
+      background: #1A1A1A; color: #fff;
+      padding: 8px 6px; text-align: center;
+      font-size: 9px; font-weight: 700;
+      border-right: 1px solid #2e2e2e;
     }
+    .gantt-table th:last-child { border-right: none; }
     .gantt-table th.col-srv { text-align: left; padding-left: 14px; min-width: 200px; }
-    .gantt-table th.col-hoje { background: var(--ouro); color: #1a1a1a; }
-    .gantt-table tbody tr { border-bottom: 1px solid var(--border); }
-    .gantt-table tbody tr:hover { background: var(--surface2); }
-    .gantt-table tbody td { padding: 7px 6px; text-align: center; }
+    .gantt-table th.col-hoje { background: #C8A84B; color: #1A1A1A; }
+    .gantt-table tbody tr { border-bottom: 1px solid #E5E5E5; }
+    .gantt-table tbody tr:nth-child(even) { background: #F5F5F5; }
+    .gantt-table tbody td { padding: 7px 6px; text-align: center; border-right: 1px solid #EEEEEE; }
+    .gantt-table tbody td:last-child { border-right: none; }
     .gantt-table tbody td.col-srv { text-align: left; padding-left: 14px; font-size: 12px; }
     .gantt-cel { width: 20px; height: 16px; border-radius: 2px; margin: 0 auto; }
     .gantt-cel.ativo     { background: #22C55E; }
     .gantt-cel.concluido { background: #16A34A; }
-    .gantt-cel.hoje      { background: var(--ouro); }
+    .gantt-cel.hoje      { background: #1A1A1A; }
     .gantt-cel.vazio     { background: transparent; }
 
     /* ── FORMULÁRIO CONFIGURAÇÕES ── */
     .form-secao { margin-bottom: 28px; }
     .form-secao-titulo {
-      font-size: 11px; font-weight: 700; color: var(--ouro); letter-spacing: 1.5px;
-      text-transform: uppercase; margin-bottom: 14px;
-      padding-bottom: 8px; border-bottom: 1px solid var(--border);
+      font-size: 11px; font-weight: 700; color: #C8A84B;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      margin-bottom: 14px; padding-bottom: 8px;
+      border-bottom: 1px solid #E5E5E5;
     }
     .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
-    .form-grid-full { grid-column: 1 / -1; }
+    .form-full { grid-column: 1 / -1; }
     .form-grupo { display: flex; flex-direction: column; gap: 5px; }
-    .form-label { font-size: 11px; font-weight: 600; color: var(--texto-2); letter-spacing: 0.5px; text-transform: uppercase; }
-    .form-input, .form-select, .form-textarea {
-      padding: 9px 12px; background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 8px; color: var(--texto); font-size: 13px;
-      outline: none; transition: border-color 0.15s; width: 100%;
+    .form-label {
+      font-size: 10px; font-weight: 700; color: #999;
+      letter-spacing: 0.5px; text-transform: uppercase;
     }
-    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--ouro-dim); }
-    .form-select option { background: var(--surface2); }
+    .form-input, .form-select, .form-textarea {
+      padding: 9px 12px;
+      background: #fff;
+      border: 1px solid #E5E5E5;
+      border-radius: 4px;
+      color: #1A1A1A;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s;
+      width: 100%;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: #C8A84B; }
     .form-textarea { resize: vertical; min-height: 80px; }
-    .form-hint { font-size: 11px; color: var(--texto-2); }
     .form-acoes {
       display: flex; gap: 10px; justify-content: flex-end;
-      padding-top: 20px; border-top: 1px solid var(--border); margin-top: 8px;
+      padding-top: 20px; border-top: 1px solid #E5E5E5;
     }
 
-    /* ── ESTADO VAZIO / LOADING ── */
-    .estado-loading {
-      text-align: center; padding: 60px 20px; color: var(--texto-2);
-    }
-    .estado-loading-texto { font-size: 14px; animation: pulsar 1.5s ease infinite; }
+    /* ── LOADING / ERRO ── */
+    .estado-loading { text-align: center; padding: 60px 20px; color: #999; font-size: 16px; }
+    .estado-erro    { text-align: center; padding: 60px 20px; color: #DC2626; font-size: 16px; }
+    .loading-pulse  { animation: pulsar 1.4s ease-in-out infinite; }
     @keyframes pulsar { 0%,100%{opacity:0.4} 50%{opacity:1} }
 
-    .estado-erro {
-      text-align: center; padding: 60px 20px; color: var(--vermelho);
+    /* ── RODAPÉ ── */
+    .rodape {
+      padding: 12px 24px;
+      border-top: 1px solid #E5E5E5;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10px;
+      color: #999;
+      background: #fff;
     }
+    .rodape-empresa { color: #1A1A1A; font-weight: 800; font-size: 11px; }
   </style>
 </head>
 <body>
 
-  <!-- TOPBAR -->
-  <header class="topbar">
-    <div class="topbar-logo">
-      <span class="topbar-logo-nome">DEKA.</span>
-      <span class="topbar-logo-sub">OS</span>
-    </div>
-    <div class="breadcrumb">
-      <a href="hub.html">Obras</a>
-      <span class="breadcrumb-sep">/</span>
-      <span class="breadcrumb-atual" id="breadcrumb-nome">Carregando...</span>
-    </div>
-    <div class="topbar-spacer"></div>
-    <button class="btn-ghost" onclick="window.location.href='hub.html'">← Voltar</button>
-  </header>
-
-  <!-- HERO DA OBRA -->
-  <section class="obra-hero" id="obra-hero" style="display:none">
-    <div class="obra-capa" id="obra-capa">
-      <div class="obra-capa-placeholder" id="obra-capa-placeholder">🏗️</div>
-      <div class="obra-capa-overlay"></div>
-    </div>
-    <div class="obra-info">
-      <div class="obra-badges" id="obra-badges"></div>
-      <div class="obra-nome" id="obra-nome"></div>
-      <div class="obra-cliente" id="obra-cliente"></div>
-      <div class="obra-endereco" id="obra-endereco"></div>
-      <div class="obra-progresso-wrap">
-        <div class="obra-progresso-label">
-          <span>Avanço geral da obra</span>
-          <span class="obra-progresso-pct" id="obra-pct">0%</span>
-        </div>
-        <div class="obra-progresso-barra">
-          <div class="obra-progresso-fill" id="obra-pct-fill" style="width:0%"></div>
-        </div>
-      </div>
-      <div class="obra-acoes">
-        <button class="btn-ghost" id="btn-cockpit" onclick="window.location.href='cockpit.html'">🎤 Cockpit</button>
-        <button class="btn-ghost" id="btn-relatorio" onclick="window.location.href='relatorios.html'">📄 Relatório</button>
-        <button class="btn-primary" id="btn-ir-config">⚙️ Configurar</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- TABS -->
-  <nav class="tabs-bar" id="tabs-bar" style="display:none">
-    <button class="tab-btn ativo" data-tab="visao-geral">📊 Visão Geral</button>
-    <button class="tab-btn" data-tab="servicos">📋 Serviços</button>
-    <button class="tab-btn" data-tab="cronograma">📅 Cronograma</button>
-    <button class="tab-btn" data-tab="configuracoes">⚙️ Configurações</button>
+  <!-- BARRA NAVEGAÇÃO -->
+  <nav class="nav-bar">
+    <button class="nav-btn" onclick="window.location.href='hub.html'">← Obras</button>
+    <div class="nav-spacer"></div>
+    <span class="nav-semana" id="nav-semana">Semana <b>—</b></span>
+    <button class="nav-btn" onclick="window.location.href='cockpit.html'">Cockpit</button>
+    <button class="nav-btn" onclick="window.location.href='relatorios.html'">Relatório PDF</button>
+    <button class="nav-btn ouro" id="btn-ir-config">Configurar</button>
   </nav>
 
   <!-- LOADING -->
-  <div class="estado-loading" id="estado-loading">
-    <div class="estado-loading-texto">⏳ Carregando obra...</div>
-  </div>
+  <div class="estado-loading loading-pulse" id="estado-loading">⏳ Carregando obra...</div>
 
   <!-- ERRO -->
   <div class="estado-erro" id="estado-erro" style="display:none">
     <div style="font-size:32px;margin-bottom:12px">⚠️</div>
-    <div id="erro-mensagem">Obra não encontrada.</div>
-    <button class="btn-ghost" style="margin-top:16px" onclick="window.location.href='hub.html'">← Voltar para Obras</button>
+    <div id="erro-msg">Obra não encontrada.</div>
+    <button class="nav-btn" style="margin-top:16px;color:#1A1A1A;border-color:#E5E5E5" onclick="window.location.href='hub.html'">← Voltar para Obras</button>
   </div>
 
-  <!-- TAB: VISÃO GERAL -->
-  <div class="tab-content ativo" id="tab-visao-geral">
-    <div class="kpis-grid" id="kpis-grid"></div>
-    <div class="resumo-fin" id="resumo-fin" style="display:none">
-      <div class="resumo-fin-titulo">Resumo Financeiro e Prazos</div>
-      <div class="resumo-fin-grid" id="resumo-fin-grid"></div>
+  <!-- CONTEÚDO PRINCIPAL -->
+  <div id="main" style="display:none">
+
+    <!-- HEADER -->
+    <header class="header">
+      <div class="logo-bloco">
+        <div class="logo-nome">BERTI.</div>
+        <div class="logo-sub">Construtora</div>
+      </div>
+      <div class="header-centro">
+        <div class="header-tag">Acompanhamento de Obra</div>
+        <div class="header-nome" id="h-nome">—</div>
+        <div class="header-end"  id="h-end">—</div>
+      </div>
+      <div class="header-meta">
+        <b id="h-cliente">—</b>
+        <span id="h-periodo">—</span><br>
+        <span id="h-entrega">—</span>
+      </div>
+    </header>
+
+    <div class="linha-ouro"></div>
+
+    <!-- FINANCEIRO -->
+    <div class="financeiro">
+      <div class="fin-item">
+        <div class="fin-label">Valor do Contrato</div>
+        <div class="fin-valor" id="f-contrato">R$ —</div>
+        <div class="fin-sub"   id="f-medicoes-sub">—</div>
+      </div>
+      <div class="fin-item">
+        <div class="fin-label">Valor Pago</div>
+        <div class="fin-valor" id="f-pago">R$ 0</div>
+        <div class="fin-sub">0% do contrato</div>
+      </div>
+      <div class="fin-item">
+        <div class="fin-label">Saldo em Aberto</div>
+        <div class="fin-valor" id="f-saldo">R$ —</div>
+        <div class="fin-sub">100% restante</div>
+      </div>
+      <div class="fin-item">
+        <div class="fin-label">Próx. Medição</div>
+        <div class="fin-valor" id="f-prox-medicao" style="font-size:16px;margin-top:3px">—</div>
+        <div class="fin-sub"   id="f-medicao-num">—</div>
+      </div>
+      <div class="fin-item">
+        <div class="fin-label">Semana / Rev.</div>
+        <div class="fin-valor" id="f-semana-rev" style="font-size:16px;margin-top:3px">—</div>
+      </div>
+      <div class="fin-item">
+        <div class="fin-label">Contratada</div>
+        <div class="fin-valor" id="f-empresa" style="font-size:14px;margin-top:3px;line-height:1.2">—</div>
+      </div>
     </div>
-  </div>
 
-  <!-- TAB: SERVIÇOS -->
-  <div class="tab-content" id="tab-servicos">
-    <div class="tabela-wrap">
-      <table class="tabela">
-        <thead>
-          <tr>
-            <th>Código</th>
-            <th style="width:45%">Serviço</th>
-            <th>Status</th>
-            <th>Progresso</th>
-            <th>Início</th>
-            <th>Fim</th>
-          </tr>
-        </thead>
-        <tbody id="tbody-servicos">
-          <tr><td colspan="6" style="text-align:center;padding:30px;color:var(--texto-2)">Carregando serviços...</td></tr>
-        </tbody>
-      </table>
+    <!-- KPIs -->
+    <div class="kpis">
+      <div class="kpi">
+        <div class="kpi-label">Avanço Geral</div>
+        <div class="kpi-val ouro" id="k-avanco">—</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Serviços Concluídos</div>
+        <div class="kpi-val" id="k-concluidos">—</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Em Andamento</div>
+        <div class="kpi-val" id="k-andamento">—</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Entrega Prevista</div>
+        <div class="kpi-data" id="k-entrega">—</div>
+        <div id="k-prazo-status"></div>
+      </div>
     </div>
-  </div>
 
-  <!-- TAB: CRONOGRAMA -->
-  <div class="tab-content" id="tab-cronograma">
-    <div class="gantt-wrap" id="gantt-container">
-      <div style="text-align:center;padding:30px;color:var(--texto-2)">Carregando cronograma...</div>
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab-btn ativo" data-tab="visao-geral">Visão Geral</button>
+      <button class="tab-btn" data-tab="servicos">Serviços</button>
+      <button class="tab-btn" data-tab="cronograma">Cronograma</button>
+      <button class="tab-btn" data-tab="configuracoes">Configurações</button>
     </div>
-  </div>
 
-  <!-- TAB: CONFIGURAÇÕES -->
-  <div class="tab-content" id="tab-configuracoes">
-    <form id="form-obra" autocomplete="off">
-
-      <!-- IDENTIFICAÇÃO -->
-      <div class="form-secao">
-        <div class="form-secao-titulo">Identificação da Obra</div>
-        <div class="form-grid">
-          <div class="form-grupo form-grid-full">
-            <label class="form-label" for="f-nome">Nome da Obra *</label>
-            <input class="form-input" type="text" id="f-nome" name="nome" required>
-          </div>
-          <div class="form-grupo">
-            <label class="form-label" for="f-tipo">Tipo de Obra</label>
-            <select class="form-select" id="f-tipo" name="tipo_obra">
-              <option value="">Selecionar...</option>
-              <option value="Reforma Comercial">Reforma Comercial</option>
-              <option value="Reforma Residencial">Reforma Residencial</option>
-              <option value="Construção Comercial">Construção Comercial</option>
-              <option value="Construção Residencial">Construção Residencial</option>
-              <option value="Retrofit">Retrofit</option>
-              <option value="Obra Nova">Obra Nova</option>
-            </select>
-          </div>
-          <div class="form-grupo">
-            <label class="form-label" for="f-status">Status</label>
-            <select class="form-select" id="f-status" name="status">
-              <option value="ativa">Ativa</option>
-              <option value="pausada">Pausada</option>
-              <option value="concluida">Concluída</option>
-            </select>
-          </div>
-          <div class="form-grupo form-grid-full">
-            <label class="form-label" for="f-endereco">Endereço da Obra</label>
-            <input class="form-input" type="text" id="f-endereco" name="endereco">
-          </div>
-          <div class="form-grupo">
-            <label class="form-label" for="f-data-inicio">Data de Início</label>
-            <input class="form-input" type="date" id="f-data-inicio" name="data_inicio">
-          </div>
-          <div class="form-grupo">
-            <label class="form-label" for="f-data-fim">Entrega Prevista</label>
-            <input class="form-input" type="date" id="f-data-fim" name="data_previsao_fim">
-          </div>
-          <div class="form-grupo">
-            <label class="form-label" for="f-semana">Semana Atual</label>
-            <input class="form-input" type="number" id="f-semana" name="semana" min="1">
-          </div>
-          <div class="form-grupo form-grid-full">
-            <label class="form-label" for="f-escopo">Escopo Resumido</label>
-            <textarea class="form-textarea" id="f-escopo" name="escopo_resumo" rows="3"></textarea>
-          </div>
-          <div class="form-grupo form-grid-full">
-            <label class="form-label" for="f-capa-url">URL da Capa</label>
-            <input class="form-input" type="url" id="f-capa-url" name="capa_url" placeholder="https://...">
-          </div>
+    <!-- TAB: VISÃO GERAL -->
+    <div class="tab-content ativo" id="tab-visao-geral">
+      <div class="secao">
+        <div class="sec-hdr">
+          <span class="sec-num">01</span>
+          <span class="sec-tit">Resumo da Semana</span>
+          <span class="sec-line"></span>
+        </div>
+        <div id="resumo-semana" style="font-size:14px;color:#444;line-height:1.6">
+          Nenhum resumo disponível para esta semana.
         </div>
       </div>
+    </div>
 
-      <!-- CLIENTE -->
-      <div class="form-secao">
-        <div class="form-secao-titulo">Dados do Cliente</div>
-        <div class="form-grid">
-          <div class="form-grupo">
-            <label class="form-label" for="f-cliente">Nome / Apelido *</label>
-            <input class="form-input" type="text" id="f-cliente" name="cliente" required>
-          </div>
-          <div class="form-grupo">
-            <label class="form-label" for="f-razao">Razão Social</label>
-            <input class="form-input" type="text" id="f-razao" name="razao_cliente">
-          </div>
-          <div class="form-grupo">
-            <label class="form-label" for="f-cnpj">CNPJ / CPF</label>
-            <input class="form-input" type="text" id="f-cnpj" name="cnpj_cliente">
-          </div>
-          <div class="form-grupo">
-            <label class="form-label" for="f-email">E-mail</label>
-            <input class="form-input" type="email" id="f-email" name="email_cliente">
-          </div>
-          <div class="form-grupo">
-            <label class="form-label" for="f-telefone">Telefone / WhatsApp</label>
-            <input class="form-input" type="text" id="f-telefone" name="telefone_cliente">
-          </div>
+    <!-- TAB: SERVIÇOS -->
+    <div class="tab-content" id="tab-servicos">
+      <div class="secao">
+        <div class="sec-hdr">
+          <span class="sec-num">02</span>
+          <span class="sec-tit">Serviços Executados</span>
+          <span class="sec-line"></span>
+        </div>
+        <table class="tabela">
+          <thead>
+            <tr>
+              <th style="width:46%">Serviço</th>
+              <th style="width:12%">Local</th>
+              <th style="width:16%">Status</th>
+              <th style="width:16%">Progresso</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-servicos">
+            <tr><td colspan="4" style="text-align:center;padding:30px;color:#999">Carregando serviços...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB: CRONOGRAMA -->
+    <div class="tab-content" id="tab-cronograma">
+      <div class="secao">
+        <div class="sec-hdr">
+          <span class="sec-num">03</span>
+          <span class="sec-tit">Cronograma — Próximas 2 Semanas</span>
+          <span class="sec-line"></span>
+        </div>
+        <div class="gantt-wrap" id="gantt-container">
+          <div style="text-align:center;padding:30px;color:#999">Carregando cronograma...</div>
         </div>
       </div>
+    </div>
 
-      <!-- FINANCEIRO -->
-      <div class="form-secao">
-        <div class="form-secao-titulo">Financeiro e Medições</div>
-        <div class="form-grid">
-          <div class="form-grupo">
-            <label class="form-label" for="f-contrato">Valor do Contrato (R$)</label>
-            <input class="form-input" type="number" id="f-contrato" name="valor_contrato" min="0" step="0.01">
+    <!-- TAB: CONFIGURAÇÕES -->
+    <div class="tab-content" id="tab-configuracoes">
+      <div class="secao">
+        <form id="form-obra" autocomplete="off">
+
+          <div class="form-secao">
+            <div class="form-secao-titulo">Identificação da Obra</div>
+            <div class="form-grid">
+              <div class="form-grupo form-full">
+                <label class="form-label">Nome da Obra *</label>
+                <input class="form-input" type="text" name="nome" required>
+              </div>
+              <div class="form-grupo">
+                <label class="form-label">Tipo de Obra</label>
+                <select class="form-select" name="tipo_obra">
+                  <option value="">Selecionar...</option>
+                  <option>Reforma Comercial</option>
+                  <option>Reforma Residencial</option>
+                  <option>Construção Comercial</option>
+                  <option>Construção Residencial</option>
+                  <option>Retrofit</option>
+                </select>
+              </div>
+              <div class="form-grupo">
+                <label class="form-label">Status</label>
+                <select class="form-select" name="status">
+                  <option value="ativa">Ativa</option>
+                  <option value="pausada">Pausada</option>
+                  <option value="concluida">Concluída</option>
+                </select>
+              </div>
+              <div class="form-grupo form-full">
+                <label class="form-label">Endereço da Obra</label>
+                <input class="form-input" type="text" name="endereco">
+              </div>
+              <div class="form-grupo">
+                <label class="form-label">Data de Início</label>
+                <input class="form-input" type="date" name="data_inicio">
+              </div>
+              <div class="form-grupo">
+                <label class="form-label">Entrega Prevista</label>
+                <input class="form-input" type="date" name="data_previsao_fim">
+              </div>
+              <div class="form-grupo">
+                <label class="form-label">Semana Atual</label>
+                <input class="form-input" type="number" name="semana" min="1">
+              </div>
+              <div class="form-grupo form-full">
+                <label class="form-label">Escopo Resumido</label>
+                <textarea class="form-textarea" name="escopo_resumo" rows="3"></textarea>
+              </div>
+              <div class="form-grupo form-full">
+                <label class="form-label">URL da Capa</label>
+                <input class="form-input" type="url" name="capa_url" placeholder="https://...">
+              </div>
+            </div>
           </div>
-          <div class="form-grupo">
-            <label class="form-label" for="f-taxa">Taxa de Administração (%)</label>
-            <input class="form-input" type="number" id="f-taxa" name="taxa_admin" min="0" max="100" step="0.1">
+
+          <div class="form-secao">
+            <div class="form-secao-titulo">Dados do Cliente</div>
+            <div class="form-grid">
+              <div class="form-grupo">
+                <label class="form-label">Nome / Apelido *</label>
+                <input class="form-input" type="text" name="cliente" required>
+              </div>
+              <div class="form-grupo">
+                <label class="form-label">Razão Social</label>
+                <input class="form-input" type="text" name="razao_cliente">
+              </div>
+              <div class="form-grupo">
+                <label class="form-label">CNPJ / CPF</label>
+                <input class="form-input" type="text" name="cnpj_cliente">
+              </div>
+              <div class="form-grupo">
+                <label class="form-label">E-mail</label>
+                <input class="form-input" type="email" name="email_cliente">
+              </div>
+              <div class="form-grupo">
+                <label class="form-label">Telefone / WhatsApp</label>
+                <input class="form-input" type="text" name="telefone_cliente">
+              </div>
+            </div>
           </div>
-          <div class="form-grupo">
-            <label class="form-label" for="f-medicoes">Nº de Medições Previstas</label>
-            <input class="form-input" type="number" id="f-medicoes" name="num_medicoes" min="1">
+
+          <div class="form-secao">
+            <div class="form-secao-titulo">Financeiro e Medições</div>
+            <div class="form-grid">
+              <div class="form-grupo">
+                <label class="form-label">Valor do Contrato (R$)</label>
+                <input class="form-input" type="number" name="valor_contrato" min="0" step="0.01">
+              </div>
+              <div class="form-grupo">
+                <label class="form-label">Taxa de Administração (%)</label>
+                <input class="form-input" type="number" name="taxa_admin" min="0" max="100" step="0.1">
+              </div>
+              <div class="form-grupo">
+                <label class="form-label">Nº de Medições Previstas</label>
+                <input class="form-input" type="number" name="num_medicoes" min="1">
+              </div>
+              <div class="form-grupo">
+                <label class="form-label">Periodicidade</label>
+                <select class="form-select" name="periodicidade">
+                  <option value="">Selecionar...</option>
+                  <option>Mensal</option>
+                  <option>Quinzenal</option>
+                  <option>Semanal</option>
+                  <option>Por etapa</option>
+                </select>
+              </div>
+              <div class="form-grupo">
+                <label class="form-label">Forma de Pagamento</label>
+                <select class="form-select" name="forma_pagamento">
+                  <option value="">Selecionar...</option>
+                  <option>PIX</option>
+                  <option>Transferência</option>
+                  <option>Boleto</option>
+                </select>
+              </div>
+            </div>
           </div>
-          <div class="form-grupo">
-            <label class="form-label" for="f-periodicidade">Periodicidade</label>
-            <select class="form-select" id="f-periodicidade" name="periodicidade">
-              <option value="">Selecionar...</option>
-              <option value="Mensal">Mensal</option>
-              <option value="Quinzenal">Quinzenal</option>
-              <option value="Semanal">Semanal</option>
-              <option value="Por etapa">Por etapa</option>
-            </select>
+
+          <div class="form-secao">
+            <div class="form-secao-titulo">Equipe Responsável</div>
+            <div class="form-grid">
+              <div class="form-grupo">
+                <label class="form-label">Responsável Técnico</label>
+                <input class="form-input" type="text" name="responsavel_tecnico" placeholder="Nome — Registro">
+              </div>
+              <div class="form-grupo">
+                <label class="form-label">Gestor da Obra</label>
+                <input class="form-input" type="text" name="nome_gestor">
+              </div>
+            </div>
           </div>
-          <div class="form-grupo">
-            <label class="form-label" for="f-pagamento">Forma de Pagamento</label>
-            <select class="form-select" id="f-pagamento" name="forma_pagamento">
-              <option value="">Selecionar...</option>
-              <option value="PIX">PIX</option>
-              <option value="Transferência">Transferência</option>
-              <option value="Boleto">Boleto</option>
-              <option value="Cheque">Cheque</option>
-            </select>
+
+          <div class="form-secao">
+            <div class="form-secao-titulo">Links Externos</div>
+            <div class="form-grid">
+              <div class="form-grupo">
+                <label class="form-label">Google Drive</label>
+                <input class="form-input" type="url" name="link_drive" placeholder="https://drive.google.com/...">
+              </div>
+              <div class="form-grupo">
+                <label class="form-label">Proposta</label>
+                <input class="form-input" type="url" name="link_proposta" placeholder="https://...">
+              </div>
+              <div class="form-grupo">
+                <label class="form-label">Contrato</label>
+                <input class="form-input" type="url" name="link_contrato" placeholder="https://...">
+              </div>
+              <div class="form-grupo">
+                <label class="form-label">Pasta de Fotos</label>
+                <input class="form-input" type="url" name="link_fotos" placeholder="https://...">
+              </div>
+              <div class="form-grupo">
+                <label class="form-label">Relatórios</label>
+                <input class="form-input" type="url" name="link_relatorios" placeholder="https://...">
+              </div>
+              <div class="form-grupo">
+                <label class="form-label">Medições</label>
+                <input class="form-input" type="url" name="link_medicoes" placeholder="https://...">
+              </div>
+              <div class="form-grupo">
+                <label class="form-label">Orçamento</label>
+                <input class="form-input" type="url" name="link_orcamento" placeholder="https://...">
+              </div>
+              <div class="form-grupo">
+                <label class="form-label">Portal do Cliente</label>
+                <input class="form-input" type="url" name="link_portal" placeholder="https://...">
+              </div>
+            </div>
           </div>
-        </div>
+
+          <div class="form-secao">
+            <div class="form-secao-titulo">Dados da Empresa (Berti Construtora)</div>
+            <div class="form-grid">
+              <div class="form-grupo">
+                <label class="form-label">Razão Social</label>
+                <input class="form-input" type="text" name="empresa" placeholder="BERTI CONSTRUTORA LTDA">
+              </div>
+              <div class="form-grupo">
+                <label class="form-label">CNPJ</label>
+                <input class="form-input" type="text" name="cnpj_empresa">
+              </div>
+              <div class="form-grupo">
+                <label class="form-label">Telefone</label>
+                <input class="form-input" type="text" name="tel_empresa">
+              </div>
+              <div class="form-grupo">
+                <label class="form-label">E-mail</label>
+                <input class="form-input" type="email" name="email_empresa">
+              </div>
+              <div class="form-grupo">
+                <label class="form-label">Chave PIX</label>
+                <input class="form-input" type="text" name="pix_empresa">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-acoes">
+            <button type="button" class="nav-btn" onclick="window.location.href='hub.html'">Cancelar</button>
+            <button type="submit" class="nav-btn ouro" id="btn-salvar">💾 Salvar Obra</button>
+          </div>
+
+        </form>
       </div>
+    </div>
 
-      <!-- EQUIPE -->
-      <div class="form-secao">
-        <div class="form-secao-titulo">Equipe Responsável</div>
-        <div class="form-grid">
-          <div class="form-grupo">
-            <label class="form-label" for="f-resp-tec">Responsável Técnico</label>
-            <input class="form-input" type="text" id="f-resp-tec" name="responsavel_tecnico"
-                   placeholder="Nome — Registro">
-          </div>
-          <div class="form-grupo">
-            <label class="form-label" for="f-gestor">Gestor da Obra</label>
-            <input class="form-input" type="text" id="f-gestor" name="nome_gestor">
-          </div>
-        </div>
-      </div>
+    <!-- RODAPÉ -->
+    <footer class="rodape">
+      <span class="rodape-empresa">Berti Construtora LTDA</span>
+      <span id="rod-centro">—</span>
+      <span id="rod-data">—</span>
+    </footer>
 
-      <!-- LINKS EXTERNOS -->
-      <div class="form-secao">
-        <div class="form-secao-titulo">Links Externos</div>
-        <div class="form-grid">
-          <div class="form-grupo">
-            <label class="form-label" for="f-link-drive">Google Drive</label>
-            <input class="form-input" type="url" id="f-link-drive" name="link_drive" placeholder="https://drive.google.com/...">
-          </div>
-          <div class="form-grupo">
-            <label class="form-label" for="f-link-proposta">Proposta</label>
-            <input class="form-input" type="url" id="f-link-proposta" name="link_proposta" placeholder="https://...">
-          </div>
-          <div class="form-grupo">
-            <label class="form-label" for="f-link-contrato">Contrato</label>
-            <input class="form-input" type="url" id="f-link-contrato" name="link_contrato" placeholder="https://...">
-          </div>
-          <div class="form-grupo">
-            <label class="form-label" for="f-link-fotos">Pasta de Fotos</label>
-            <input class="form-input" type="url" id="f-link-fotos" name="link_fotos" placeholder="https://...">
-          </div>
-          <div class="form-grupo">
-            <label class="form-label" for="f-link-relatorios">Relatórios</label>
-            <input class="form-input" type="url" id="f-link-relatorios" name="link_relatorios" placeholder="https://...">
-          </div>
-          <div class="form-grupo">
-            <label class="form-label" for="f-link-medicoes">Medições</label>
-            <input class="form-input" type="url" id="f-link-medicoes" name="link_medicoes" placeholder="https://...">
-          </div>
-          <div class="form-grupo">
-            <label class="form-label" for="f-link-orcamento">Orçamento</label>
-            <input class="form-input" type="url" id="f-link-orcamento" name="link_orcamento" placeholder="https://...">
-          </div>
-          <div class="form-grupo">
-            <label class="form-label" for="f-link-portal">Portal do Cliente</label>
-            <input class="form-input" type="url" id="f-link-portal" name="link_portal" placeholder="https://...">
-          </div>
-        </div>
-      </div>
-
-      <!-- EMPRESA BERTI -->
-      <div class="form-secao">
-        <div class="form-secao-titulo">Dados da Empresa (Berti Construtora)</div>
-        <div class="form-hint" style="margin-bottom:12px">
-          Preenchidos uma vez e reutilizados em todos os relatórios e documentos.
-        </div>
-        <div class="form-grid">
-          <div class="form-grupo">
-            <label class="form-label" for="f-empresa">Razão Social</label>
-            <input class="form-input" type="text" id="f-empresa" name="empresa" placeholder="BERTI CONSTRUTORA LTDA">
-          </div>
-          <div class="form-grupo">
-            <label class="form-label" for="f-cnpj-empresa">CNPJ</label>
-            <input class="form-input" type="text" id="f-cnpj-empresa" name="cnpj_empresa" placeholder="59.622.624/0001-93">
-          </div>
-          <div class="form-grupo">
-            <label class="form-label" for="f-tel-empresa">Telefone</label>
-            <input class="form-input" type="text" id="f-tel-empresa" name="tel_empresa">
-          </div>
-          <div class="form-grupo">
-            <label class="form-label" for="f-email-empresa">E-mail</label>
-            <input class="form-input" type="email" id="f-email-empresa" name="email_empresa">
-          </div>
-          <div class="form-grupo">
-            <label class="form-label" for="f-pix-empresa">Chave PIX</label>
-            <input class="form-input" type="text" id="f-pix-empresa" name="pix_empresa">
-          </div>
-        </div>
-      </div>
-
-      <!-- BOTÃO SALVAR -->
-      <div class="form-acoes">
-        <button type="button" class="btn-ghost" onclick="window.location.href='hub.html'">Cancelar</button>
-        <button type="submit" class="btn-primary" id="btn-salvar">💾 Salvar Obra</button>
-      </div>
-
-    </form>
-  </div>
+  </div><!-- /main -->
 
   <script>
     window.DEKA_CONFIG = {
