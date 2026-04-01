@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relatório Berti</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700;800&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Barlow Condensed', sans-serif;
+      background: #FFFFFF;
+      color: #1A1A1A;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .pagina {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 0 60px 0;
+      background: #FFFFFF;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: #1A1A1A;
+      color: #FFFFFF;
+      padding: 20px 32px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 24px;
+      align-items: center;
+    }
+    .logo-bloco {
+      border-right: 1px solid #444;
+      padding-right: 24px;
+    }
+    .logo-nome {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: 3px;
+      color: #FFFFFF;
+    }
+    .logo-sub {
+      font-size: 9px;
+      letter-spacing: 4px;
+      color: #C8A84B;
+      margin-top: 2px;
+    }
+    .header-titulo {
+      font-size: 11px;
+      color: #C8A84B;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .header-obra {
+      font-size: 20px;
+      font-weight: 600;
+      color: #FFFFFF;
+    }
+    .header-endereco {
+      font-size: 11px;
+      color: #999;
+      margin-top: 2px;
+    }
+    .header-meta {
+      text-align: right;
+      font-size: 12px;
+      color: #CCCCCC;
+      line-height: 1.8;
+    }
+    .header-meta strong {
+      display: block;
+      font-size: 16px;
+      font-weight: 700;
+      color: #FFFFFF;
+      margin-bottom: 4px;
+    }
+
+    /* ── KPIs ── */
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-bottom: 2px solid #E5E5E5;
+    }
+    .kpi {
+      padding: 20px 24px;
+      border-right: 1px solid #E5E5E5;
+    }
+    .kpi:last-child { border-right: none; }
+    .kpi-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #666666;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .kpi-valor {
+      font-size: 44px;
+      font-weight: 700;
+      color: #1A1A1A;
+      line-height: 1;
+    }
+    .kpi-valor.ouro { color: #C8A84B; }
+    .kpi-valor.verde { color: #22C55E; }
+    .status-prazo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 20px;
+      font-weight: 700;
+    }
+    .status-prazo.ok      { color: #22C55E; }
+    .status-prazo.atencao { color: #F59E0B; }
+    .status-prazo.critico { color: #DC2626; }
+
+    /* ── SEÇÕES ── */
+    .secao {
+      padding: 24px 32px;
+      border-bottom: 1px solid #E5E5E5;
+    }
+    .secao-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .secao-num {
+      font-size: 11px;
+      font-weight: 700;
+      color: #C8A84B;
+      letter-spacing: 1px;
+      min-width: 20px;
+    }
+    .secao-titulo {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #1A1A1A;
+    }
+    .secao-linha {
+      flex: 1;
+      height: 1px;
+      background: #E5E5E5;
+    }
+    .resumo-texto {
+      font-size: 13px;
+      line-height: 1.7;
+      color: #333333;
+    }
+
+    /* ── TABELA DE SERVIÇOS ── */
+    .tabela {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .tabela thead tr {
+      background: #1A1A1A;
+      color: #FFFFFF;
+    }
+    .tabela thead th {
+      padding: 10px 16px;
+      text-align: left;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .tabela tbody tr:nth-child(even) { background: #F5F5F5; }
+    .tabela tbody tr:nth-child(odd)  { background: #FFFFFF; }
+    .tabela tbody td {
+      padding: 10px 16px;
+      border-bottom: 1px solid #E5E5E5;
+      color: #1A1A1A;
+      vertical-align: middle;
+    }
+
+    /* badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-concluido  { background: rgba(34,197,94,0.12); color: #16A34A; }
+    .badge-andamento  { background: rgba(30,58,95,0.10);  color: #1E3A5F; }
+    .badge-executar   { background: rgba(100,100,100,0.10); color: #666; }
+    .badge-atrasado   { background: rgba(220,38,38,0.12); color: #DC2626; }
+
+    /* barra de progresso */
+    .prog-wrap { display: flex; align-items: center; gap: 8px; }
+    .prog-barra {
+      flex: 1; height: 3px;
+      background: #E5E5E5; border-radius: 2px;
+      overflow: hidden; min-width: 50px;
+    }
+    .prog-fill { height: 100%; background: #1A1A1A; border-radius: 2px; }
+    .prog-pct  { font-size: 12px; font-weight: 600; min-width: 34px; text-align: right; }
+
+    /* ── FOTOS ── */
+    .fotos-cat {
+      font-size: 10px; font-weight: 700;
+      color: #999; letter-spacing: 2px;
+      text-transform: uppercase;
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 14px;
+    }
+    .fotos-cat::after { content: ''; flex: 1; height: 1px; background: #E5E5E5; }
+    .fotos-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .foto-wrap img {
+      width: 100%; height: 200px;
+      object-fit: cover; display: block;
+    }
+    .foto-data {
+      font-size: 11px; color: #999;
+      margin-top: 4px; padding: 0 2px;
+    }
+    .foto-data::before { content: '· '; }
+
+    /* ── PRÓXIMOS PASSOS ── */
+    .proximos-lista { list-style: none; }
+    .proximos-lista li {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 8px 0; border-bottom: 1px solid #F5F5F5;
+      font-size: 13px; color: #333;
+    }
+    .proximos-lista li::before {
+      content: '→';
+      color: #C8A84B;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* ── RODAPÉ ── */
+    .rodape {
+      padding: 16px 32px;
+      border-top: 1px solid #E5E5E5;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10px;
+      color: #999999;
+    }
+    .rodape-empresa { color: #1A1A1A; font-weight: 700; font-size: 11px; }
+    .rodape-centro  { font-weight: 700; letter-spacing: 1px; text-transform: uppercase; font-size: 11px; }
+
+    /* ── PRINT ── */
+    @media print {
+      .sem-print { display: none !important; }
+      body { margin: 0; }
+      .pagina { max-width: 100%; }
+      .secao { page-break-inside: avoid; }
+      .fotos-grid { page-break-inside: avoid; }
+      @page { margin: 1.5cm; size: A4 portrait; }
+    }
+
+    /* ── BOTÃO IMPRIMIR ── */
+    .sem-print {
+      background: #1A1A1A;
+      padding: 12px 32px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .btn-print {
+      padding: 8px 20px;
+      background: #C8A84B;
+      color: #1A1A1A;
+      border: none;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .btn-fechar {
+      padding: 8px 16px;
+      background: transparent;
+      color: #FFFFFF;
+      border: 1px solid #444;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <!-- BOTÃO IMPRIMIR — some no print -->
+  <div class="sem-print">
+    <button class="btn-print" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+    <button class="btn-fechar" onclick="window.close()">✕ Fechar</button>
+  </div>
+
+  <!-- CONTEÚDO DO RELATÓRIO — renderizado pelo JS inline -->
+  <div id="relatorio-root"></div>
+
+  <script>
+    // DADOS INJETADOS PELO relatorios.js
+    // window.RELATORIO_DATA = { ... }
+
+    // Script que lê window.RELATORIO_DATA e renderiza o HTML
+    (function() {
+      var d = window.RELATORIO_DATA;
+      if (!d) {
+        document.getElementById('relatorio-root').innerHTML =
+          '<p style="padding:40px;font-family:sans-serif;color:#DC2626">Erro: RELATORIO_DATA não encontrado.</p>';
+        return;
+      }
+
+      // Helpers
+      function esc(s) {
+        return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      }
+      function badge(status) {
+        var map = {
+          concluido:   ['badge-concluido','Concluído'],
+          em_andamento:['badge-andamento','Em andamento'],
+          a_executar:  ['badge-executar', 'A executar'],
+          atrasado:    ['badge-atrasado', 'Atrasado'],
+        };
+        var b = map[status] || ['badge-executar', status];
+        return '<span class="badge '+b[0]+'">'+b[1]+'</span>';
+      }
+      function prog(pct) {
+        return '<div class="prog-wrap">'
+          + '<div class="prog-barra"><div class="prog-fill" style="width:'+pct+'%"></div></div>'
+          + '<span class="prog-pct">'+pct+'%</span></div>';
+      }
+      function statusPrazo(s) {
+        var map = { ok:'✅ No Prazo', atencao:'⚠️ Atenção', critico:'🔴 Crítico' };
+        var cls = { ok:'ok', atencao:'atencao', critico:'critico' };
+        return '<div class="status-prazo '+(cls[s]||'ok')+'">'+(map[s]||'No Prazo')+'</div>';
+      }
+
+      // Dados
+      var obra    = d.obra    || {};
+      var kpis    = d.kpis    || {};
+      var servicos = d.servicos || [];
+      var fotos   = d.fotos   || [];
+      var proximos = d.proximosPassos || [];
+
+      // ── HTML ──
+      var html = '';
+
+      // HEADER
+      html += '<div class="pagina">';
+      html += '<div class="header">';
+      html += '<div class="logo-bloco"><div class="logo-nome">BERTI.</div><div class="logo-sub">CONSTRUTORA</div></div>';
+      html += '<div><div class="header-titulo">Relatório de Obra — Semana '+esc(d.semana)+'</div>'
+            + '<div class="header-obra">'+esc(obra.nome)+'</div>'
+            + '<div class="header-endereco">'+esc(obra.endereco)+'</div></div>';
+      html += '<div class="header-meta"><strong>'+esc(obra.cliente)+'</strong>'
+            + 'Período: '+esc(d.periodoInicio)+' a '+esc(d.periodoFim)+'<br>'
+            + 'Entrega prevista: '+esc(obra.entregaPrevista)+'</div>';
+      html += '</div>';
+
+      // KPIs
+      html += '<div class="kpis">';
+      html += '<div class="kpi"><div class="kpi-label">Avanço Geral</div>'
+            + '<div class="kpi-valor ouro">'+esc(obra.percentualGeral)+'%</div></div>';
+      html += '<div class="kpi"><div class="kpi-label">Concluídos</div>'
+            + '<div class="kpi-valor">'+esc(kpis.concluidos||0)+'</div></div>';
+      html += '<div class="kpi"><div class="kpi-label">Em Andamento</div>'
+            + '<div class="kpi-valor">'+esc(kpis.emAndamento||0)+'</div></div>';
+      html += '<div class="kpi"><div class="kpi-label">Status do Prazo</div>'
+            + statusPrazo(obra.statusPrazo)+'</div>';
+      html += '</div>';
+
+      // RESUMO
+      html += '<div class="secao">';
+      html += '<div class="secao-header"><span class="secao-num">01</span>'
+            + '<span class="secao-titulo">Resumo da Semana</span>'
+            + '<span class="secao-linha"></span></div>';
+      html += '<p class="resumo-texto">'+esc(d.resumo)+'</p>';
+      html += '</div>';
+
+      // SERVIÇOS EXECUTADOS
+      if (servicos.length > 0) {
+        html += '<div class="secao">';
+        html += '<div class="secao-header"><span class="secao-num">02</span>'
+              + '<span class="secao-titulo">Serviços Executados</span>'
+              + '<span class="secao-linha"></span></div>';
+        html += '<table class="tabela"><thead><tr>'
+              + '<th style="width:50%">Serviço</th>'
+              + '<th style="width:15%">Local</th>'
+              + '<th style="width:15%">Status</th>'
+              + '<th style="width:20%">Progresso</th>'
+              + '</tr></thead><tbody>';
+        servicos.forEach(function(s) {
+          html += '<tr><td>'+esc(s.descricao)+'</td>'
+                + '<td>'+esc(s.local||'—')+'</td>'
+                + '<td>'+badge(s.status)+'</td>'
+                + '<td>'+prog(s.percentual||0)+'</td></tr>';
+        });
+        html += '</tbody></table></div>';
+      }
+
+      // FOTOS
+      if (fotos.length > 0) {
+        html += '<div class="secao">';
+        html += '<div class="secao-header"><span class="secao-num">03</span>'
+              + '<span class="secao-titulo">Registro Fotográfico</span>'
+              + '<span class="secao-linha"></span></div>';
+        html += '<div class="fotos-cat">Geral</div>';
+        html += '<div class="fotos-grid">';
+        fotos.slice(0,6).forEach(function(f) {
+          html += '<div class="foto-wrap">'
+                + '<img src="'+esc(f.url)+'" alt="'+esc(f.legenda)+'" loading="lazy">'
+                + '<div class="foto-data">'+esc(f.data)+'</div></div>';
+        });
+        html += '</div></div>';
+      }
+
+      // PRÓXIMOS PASSOS
+      if (proximos.length > 0) {
+        html += '<div class="secao">';
+        html += '<div class="secao-header"><span class="secao-num">04</span>'
+              + '<span class="secao-titulo">O que esperar na próxima semana</span>'
+              + '<span class="secao-linha"></span></div>';
+        html += '<ul class="proximos-lista">';
+        proximos.forEach(function(p) {
+          html += '<li>'+esc(p)+'</li>';
+        });
+        html += '</ul></div>';
+      }
+
+      // RODAPÉ
+      html += '<div class="rodape">'
+            + '<span class="rodape-empresa">Berti Construtora LTDA</span>'
+            + '<span class="rodape-centro">'+esc(obra.nome)+' — Semana '+esc(d.semana)+'</span>'
+            + '<span>'+esc(d.dataGeracao)+' · Rev. A</span>'
+            + '</div>';
+
+      html += '</div>'; // .pagina
+
+      document.getElementById('relatorio-root').innerHTML = html;
+    })();
+  </script>
+</body>
+</html>
