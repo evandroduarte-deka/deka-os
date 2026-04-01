@@ -258,7 +258,10 @@
     };
   </script>
   <script src="deka.js" type="module"></script>
-  <script src="obra.js" type="module"></script>
+  <script type="module">
+    import { init } from './obra.js';
+    init();
+  </script>
 
 </body>
 </html>
