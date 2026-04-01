@@ -7,7 +7,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       font-family: 'Barlow Condensed', sans-serif;
       background: #FFFFFF;
@@ -15,442 +14,372 @@
       font-size: 14px;
       line-height: 1.5;
     }
+    .pagina { max-width: 900px; margin: 0 auto; background: #FFFFFF; }
 
-    .pagina {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 0 0 60px 0;
-      background: #FFFFFF;
+    /* BARRA AÇÕES */
+    .barra-acoes {
+      background: #1A1A1A; padding: 10px 32px;
+      display: flex; gap: 10px; align-items: center;
     }
+    .btn-imprimir {
+      padding: 7px 18px; background: #C8A84B; color: #1A1A1A;
+      border: none; font-family: 'Barlow Condensed', sans-serif;
+      font-size: 13px; font-weight: 700; cursor: pointer; border-radius: 3px;
+    }
+    .btn-imprimir:hover { background: #b8953e; }
+    .btn-fechar {
+      padding: 7px 14px; background: transparent; color: #FFFFFF;
+      border: 1px solid #444; font-family: 'Barlow Condensed', sans-serif;
+      font-size: 13px; cursor: pointer; border-radius: 3px;
+    }
+    .btn-fechar:hover { background: #333; }
 
-    /* ── HEADER ── */
+    /* HEADER */
     .header {
-      background: #1A1A1A;
-      color: #FFFFFF;
+      background: #1A1A1A; color: #FFFFFF;
       padding: 20px 32px;
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      gap: 24px;
-      align-items: center;
+      display: grid; grid-template-columns: auto 1fr auto;
+      gap: 24px; align-items: center;
     }
-    .logo-bloco {
-      border-right: 1px solid #444;
-      padding-right: 24px;
-    }
-    .logo-nome {
-      font-size: 28px;
-      font-weight: 800;
-      letter-spacing: 3px;
-      color: #FFFFFF;
-    }
-    .logo-sub {
-      font-size: 9px;
-      letter-spacing: 4px;
-      color: #C8A84B;
-      margin-top: 2px;
-    }
-    .header-titulo {
-      font-size: 11px;
-      color: #C8A84B;
-      font-weight: 700;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      margin-bottom: 4px;
-    }
-    .header-obra {
-      font-size: 20px;
-      font-weight: 600;
-      color: #FFFFFF;
-    }
-    .header-endereco {
-      font-size: 11px;
-      color: #999;
-      margin-top: 2px;
-    }
-    .header-meta {
-      text-align: right;
-      font-size: 12px;
-      color: #CCCCCC;
-      line-height: 1.8;
-    }
-    .header-meta strong {
-      display: block;
-      font-size: 16px;
-      font-weight: 700;
-      color: #FFFFFF;
-      margin-bottom: 4px;
-    }
+    .logo-bloco { border-right: 1px solid #333; padding-right: 24px; min-width: 90px; }
+    .logo-nome { font-size: 26px; font-weight: 800; letter-spacing: 3px; color: #FFFFFF; }
+    .logo-sub { font-size: 9px; letter-spacing: 4px; color: #C8A84B; margin-top: 2px; text-transform: uppercase; }
+    .header-titulo { font-size: 10px; color: #C8A84B; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+    .header-obra-nome { font-size: 18px; font-weight: 600; color: #FFFFFF; line-height: 1.2; }
+    .header-obra-end { font-size: 11px; color: #888; margin-top: 4px; }
+    .header-meta { text-align: right; font-size: 12px; color: #CCCCCC; line-height: 1.8; white-space: nowrap; }
+    .header-meta strong { display: block; font-size: 15px; font-weight: 700; color: #FFFFFF; margin-bottom: 4px; }
 
-    /* ── KPIs ── */
-    .kpis {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      border-bottom: 2px solid #E5E5E5;
-    }
-    .kpi {
-      padding: 20px 24px;
-      border-right: 1px solid #E5E5E5;
-    }
+    /* LINHA DOURADA */
+    .linha-ouro { height: 2px; background: #C8A84B; width: 100%; }
+
+    /* KPIs */
+    .kpis { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid #E5E5E5; }
+    .kpi { padding: 18px 24px; border-right: 1px solid #E5E5E5; }
     .kpi:last-child { border-right: none; }
-    .kpi-label {
-      font-size: 10px;
-      font-weight: 700;
-      color: #666666;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-    .kpi-valor {
-      font-size: 44px;
-      font-weight: 700;
-      color: #1A1A1A;
-      line-height: 1;
-    }
+    .kpi-label { font-size: 10px; font-weight: 700; color: #666; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+    .kpi-valor { font-size: 42px; font-weight: 700; color: #1A1A1A; line-height: 1; }
     .kpi-valor.ouro { color: #C8A84B; }
-    .kpi-valor.verde { color: #22C55E; }
-    .status-prazo {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 20px;
-      font-weight: 700;
-    }
+    .status-prazo { display: flex; align-items: center; gap: 6px; font-size: 18px; font-weight: 700; margin-top: 4px; }
     .status-prazo.ok      { color: #22C55E; }
     .status-prazo.atencao { color: #F59E0B; }
     .status-prazo.critico { color: #DC2626; }
 
-    /* ── SEÇÕES ── */
-    .secao {
-      padding: 24px 32px;
-      border-bottom: 1px solid #E5E5E5;
-    }
-    .secao-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    .secao-num {
-      font-size: 11px;
-      font-weight: 700;
-      color: #C8A84B;
-      letter-spacing: 1px;
-      min-width: 20px;
-    }
-    .secao-titulo {
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      color: #1A1A1A;
-    }
-    .secao-linha {
-      flex: 1;
-      height: 1px;
-      background: #E5E5E5;
-    }
-    .resumo-texto {
-      font-size: 13px;
-      line-height: 1.7;
-      color: #333333;
-    }
+    /* SEÇÕES */
+    .secao { padding: 20px 32px; border-bottom: 1px solid #E5E5E5; }
+    .secao-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .secao-num { font-size: 10px; font-weight: 700; color: #C8A84B; letter-spacing: 1px; }
+    .secao-titulo { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #1A1A1A; }
+    .secao-linha { flex: 1; height: 1px; background: #E5E5E5; }
 
-    /* ── TABELA DE SERVIÇOS ── */
-    .tabela {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-    }
-    .tabela thead tr {
-      background: #1A1A1A;
-      color: #FFFFFF;
-    }
-    .tabela thead th {
-      padding: 10px 16px;
-      text-align: left;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-    }
+    /* FOTOS */
+    .fotos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .foto-wrap img { width: 100%; height: 160px; object-fit: cover; display: block; }
+    .foto-data { font-size: 11px; color: #999; margin-top: 4px; font-style: italic; }
+    .foto-legenda { font-size: 11px; color: #555; margin-top: 2px; }
+
+    /* TABELAS */
+    .tabela { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .tabela thead tr { background: #1A1A1A; color: #FFFFFF; }
+    .tabela thead th { padding: 9px 14px; text-align: left; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
     .tabela tbody tr:nth-child(even) { background: #F5F5F5; }
     .tabela tbody tr:nth-child(odd)  { background: #FFFFFF; }
-    .tabela tbody td {
-      padding: 10px 16px;
-      border-bottom: 1px solid #E5E5E5;
-      color: #1A1A1A;
-      vertical-align: middle;
-    }
+    .tabela tbody td { padding: 9px 14px; border-bottom: 1px solid #E5E5E5; vertical-align: middle; }
 
-    /* badges */
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 3px 8px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 600;
-    }
-    .badge-concluido  { background: rgba(34,197,94,0.12); color: #16A34A; }
-    .badge-andamento  { background: rgba(30,58,95,0.10);  color: #1E3A5F; }
-    .badge-executar   { background: rgba(100,100,100,0.10); color: #666; }
-    .badge-atrasado   { background: rgba(220,38,38,0.12); color: #DC2626; }
+    /* BADGES */
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 3px; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+    .badge-concluido  { background: #DCFCE7; color: #166534; }
+    .badge-andamento  { background: #DBEAFE; color: #1E3A5F; }
+    .badge-executar   { background: #F3F4F6; color: #374151; }
+    .badge-atrasado   { background: #FEE2E2; color: #991B1B; }
 
-    /* barra de progresso */
+    /* PROGRESSO */
     .prog-wrap { display: flex; align-items: center; gap: 8px; }
-    .prog-barra {
-      flex: 1; height: 3px;
-      background: #E5E5E5; border-radius: 2px;
-      overflow: hidden; min-width: 50px;
-    }
-    .prog-fill { height: 100%; background: #1A1A1A; border-radius: 2px; }
-    .prog-pct  { font-size: 12px; font-weight: 600; min-width: 34px; text-align: right; }
+    .prog-barra { width: 80px; height: 2px; background: #E5E5E5; border-radius: 1px; }
+    .prog-fill { height: 100%; background: #1A1A1A; border-radius: 1px; }
+    .prog-pct { font-size: 12px; font-weight: 600; }
 
-    /* ── FOTOS ── */
-    .fotos-cat {
-      font-size: 10px; font-weight: 700;
-      color: #999; letter-spacing: 2px;
-      text-transform: uppercase;
-      display: flex; align-items: center; gap: 12px;
-      margin-bottom: 14px;
-    }
-    .fotos-cat::after { content: ''; flex: 1; height: 1px; background: #E5E5E5; }
-    .fotos-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-    .foto-wrap img {
-      width: 100%; height: 200px;
-      object-fit: cover; display: block;
-    }
-    .foto-data {
-      font-size: 11px; color: #999;
-      margin-top: 4px; padding: 0 2px;
-    }
-    .foto-data::before { content: '· '; }
+    /* GANTT */
+    .gantt-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .gantt-table th { background: #1A1A1A; color: #FFFFFF; padding: 7px 4px; text-align: center; font-size: 9px; font-weight: 700; }
+    .gantt-table th.col-srv { text-align: left; padding-left: 14px; min-width: 180px; }
+    .gantt-table th.col-pct { min-width: 40px; }
+    .gantt-table tbody tr:nth-child(even) { background: #F5F5F5; }
+    .gantt-table tbody tr:nth-child(odd)  { background: #FFFFFF; }
+    .gantt-table tbody td { padding: 7px 4px; border-bottom: 1px solid #E5E5E5; text-align: center; }
+    .gantt-table tbody td.col-srv { text-align: left; padding-left: 14px; }
+    .gantt-pct { font-size: 11px; font-weight: 700; color: #C8A84B; }
+    .gantt-cel { width: 24px; height: 18px; border-radius: 2px; margin: 0 auto; }
+    .gantt-cel.ativo     { background: #86EFAC; }
+    .gantt-cel.concluido { background: #16A34A; }
+    .gantt-cel.andamento { background: #1E3A5F; }
+    .gantt-cel.atrasado  { background: #DC2626; }
+    .gantt-cel.hoje      { background: #1A1A1A; }
+    .gantt-cel.vazio     { background: transparent; }
 
-    /* ── PRÓXIMOS PASSOS ── */
-    .proximos-lista { list-style: none; }
-    .proximos-lista li {
-      display: flex; align-items: flex-start; gap: 10px;
-      padding: 8px 0; border-bottom: 1px solid #F5F5F5;
-      font-size: 13px; color: #333;
-    }
-    .proximos-lista li::before {
-      content: '→';
-      color: #C8A84B;
-      font-weight: 700;
-      flex-shrink: 0;
-      margin-top: 1px;
-    }
+    /* RODAPÉ */
+    .rodape { padding: 12px 32px; border-top: 1px solid #E5E5E5; display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: #999; }
+    .rodape-empresa { color: #1A1A1A; font-weight: 700; }
 
-    /* ── RODAPÉ ── */
-    .rodape {
-      padding: 16px 32px;
-      border-top: 1px solid #E5E5E5;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 10px;
-      color: #999999;
-    }
-    .rodape-empresa { color: #1A1A1A; font-weight: 700; font-size: 11px; }
-    .rodape-centro  { font-weight: 700; letter-spacing: 1px; text-transform: uppercase; font-size: 11px; }
-
-    /* ── PRINT ── */
+    /* PRINT */
     @media print {
-      .sem-print { display: none !important; }
+      .barra-acoes { display: none !important; }
       body { margin: 0; }
-      .pagina { max-width: 100%; }
-      .secao { page-break-inside: avoid; }
-      .fotos-grid { page-break-inside: avoid; }
       @page { margin: 1.5cm; size: A4 portrait; }
-    }
-
-    /* ── BOTÃO IMPRIMIR ── */
-    .sem-print {
-      background: #1A1A1A;
-      padding: 12px 32px;
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-    .btn-print {
-      padding: 8px 20px;
-      background: #C8A84B;
-      color: #1A1A1A;
-      border: none;
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      cursor: pointer;
-      border-radius: 4px;
-    }
-    .btn-fechar {
-      padding: 8px 16px;
-      background: transparent;
-      color: #FFFFFF;
-      border: 1px solid #444;
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 13px;
-      cursor: pointer;
-      border-radius: 4px;
     }
   </style>
 </head>
 <body>
-  <!-- BOTÃO IMPRIMIR — some no print -->
-  <div class="sem-print">
-    <button class="btn-print" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+
+  <div class="barra-acoes">
+    <button class="btn-imprimir" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
     <button class="btn-fechar" onclick="window.close()">✕ Fechar</button>
   </div>
 
-  <!-- CONTEÚDO DO RELATÓRIO — renderizado pelo JS inline -->
-  <div id="relatorio-root"></div>
+  <div class="pagina">
+
+    <div class="header">
+      <div class="logo-bloco">
+        <div class="logo-nome">BERTI.</div>
+        <div class="logo-sub">CONSTRUTORA</div>
+      </div>
+      <div>
+        <div class="header-titulo" id="h-semana"></div>
+        <div class="header-obra-nome" id="h-obra"></div>
+        <div class="header-obra-end" id="h-end"></div>
+      </div>
+      <div class="header-meta">
+        <strong id="h-cliente"></strong>
+        <span id="h-periodo"></span><br>
+        <span id="h-entrega"></span>
+      </div>
+    </div>
+
+    <div class="linha-ouro"></div>
+
+    <div class="kpis">
+      <div class="kpi">
+        <div class="kpi-label">Avanço Geral</div>
+        <div class="kpi-valor ouro" id="k-avanco"></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Concluídos</div>
+        <div class="kpi-valor" id="k-concluidos"></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Em Andamento</div>
+        <div class="kpi-valor" id="k-andamento"></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Status do Prazo</div>
+        <div id="k-prazo"></div>
+      </div>
+    </div>
+
+    <div class="secao" id="sec-fotos" style="display:none">
+      <div class="secao-header">
+        <span class="secao-num">01</span>
+        <span class="secao-titulo">Registro Fotográfico da Semana</span>
+        <span class="secao-linha"></span>
+      </div>
+      <div class="fotos-grid" id="fotos-grid"></div>
+    </div>
+
+    <div class="secao" id="sec-servicos" style="display:none">
+      <div class="secao-header">
+        <span class="secao-num">02</span>
+        <span class="secao-titulo">Serviços Executados</span>
+        <span class="secao-linha"></span>
+      </div>
+      <table class="tabela">
+        <thead>
+          <tr>
+            <th style="width:50%">Serviço</th>
+            <th style="width:18%">Período</th>
+            <th style="width:16%">Status</th>
+            <th style="width:16%">Progresso</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-servicos"></tbody>
+      </table>
+    </div>
+
+    <div class="secao" id="sec-plan" style="display:none">
+      <div class="secao-header">
+        <span class="secao-num">03</span>
+        <span class="secao-titulo">Planejamento — Próxima Semana</span>
+        <span class="secao-linha"></span>
+      </div>
+      <table class="tabela">
+        <thead>
+          <tr>
+            <th style="width:60%">Serviço</th>
+            <th style="width:22%">Período</th>
+            <th style="width:18%">Status Atual</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-plan"></tbody>
+      </table>
+    </div>
+
+    <div class="secao" id="sec-gantt" style="display:none">
+      <div class="secao-header">
+        <span class="secao-num">04</span>
+        <span class="secao-titulo">Cronograma — Próximas 2 Semanas</span>
+        <span class="secao-linha"></span>
+      </div>
+      <div id="gantt-container"></div>
+    </div>
+
+    <div class="rodape">
+      <span class="rodape-empresa">Berti Construtora LTDA</span>
+      <span id="rod-centro"></span>
+      <span id="rod-pagina">Página 1</span>
+    </div>
+
+  </div>
 
   <script>
-    // DADOS INJETADOS PELO relatorios.js
-    // window.RELATORIO_DATA = { ... }
+    // window.RELATORIO_DATA = { ... }   <- PLACEHOLDER NAO ALTERAR
 
-    // Script que lê window.RELATORIO_DATA e renderiza o HTML
-    (function() {
+    (function () {
       var d = window.RELATORIO_DATA;
+
       if (!d) {
-        document.getElementById('relatorio-root').innerHTML =
-          '<p style="padding:40px;font-family:sans-serif;color:#DC2626">Erro: RELATORIO_DATA não encontrado.</p>';
+        document.body.innerHTML =
+          '<p style="padding:40px;font-family:sans-serif;color:#DC2626;font-size:16px">'
+          + '⚠️ Erro: RELATORIO_DATA não carregado. Abrir este arquivo através do relatorios.js.</p>';
         return;
       }
 
-      // Helpers
       function esc(s) {
-        return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        return String(s || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
       }
+
+      function mostrar(id) {
+        var el = document.getElementById(id);
+        if (el) el.style.display = '';
+      }
+
       function badge(status) {
         var map = {
-          concluido:   ['badge-concluido','Concluído'],
-          em_andamento:['badge-andamento','Em andamento'],
-          a_executar:  ['badge-executar', 'A executar'],
-          atrasado:    ['badge-atrasado', 'Atrasado'],
+          concluido:    ['badge-concluido', 'CONCLUÍDO'],
+          em_andamento: ['badge-andamento', 'EM ANDAMENTO'],
+          a_executar:   ['badge-executar',  'A EXECUTAR'],
+          atrasado:     ['badge-atrasado',  'ATRASADO'],
         };
-        var b = map[status] || ['badge-executar', status];
-        return '<span class="badge '+b[0]+'">'+b[1]+'</span>';
+        var b = map[status] || ['badge-executar', esc(status)];
+        return '<span class="badge ' + b[0] + '">' + b[1] + '</span>';
       }
+
       function prog(pct) {
+        var v = Math.min(100, Math.max(0, parseInt(pct, 10) || 0));
         return '<div class="prog-wrap">'
-          + '<div class="prog-barra"><div class="prog-fill" style="width:'+pct+'%"></div></div>'
-          + '<span class="prog-pct">'+pct+'%</span></div>';
-      }
-      function statusPrazo(s) {
-        var map = { ok:'✅ No Prazo', atencao:'⚠️ Atenção', critico:'🔴 Crítico' };
-        var cls = { ok:'ok', atencao:'atencao', critico:'critico' };
-        return '<div class="status-prazo '+(cls[s]||'ok')+'">'+(map[s]||'No Prazo')+'</div>';
+          + '<div class="prog-barra"><div class="prog-fill" style="width:' + v + '%"></div></div>'
+          + '<span class="prog-pct">' + v + '%</span>'
+          + '</div>';
       }
 
-      // Dados
-      var obra    = d.obra    || {};
-      var kpis    = d.kpis    || {};
-      var servicos = d.servicos || [];
-      var fotos   = d.fotos   || [];
-      var proximos = d.proximosPassos || [];
-
-      // ── HTML ──
-      var html = '';
-
-      // HEADER
-      html += '<div class="pagina">';
-      html += '<div class="header">';
-      html += '<div class="logo-bloco"><div class="logo-nome">BERTI.</div><div class="logo-sub">CONSTRUTORA</div></div>';
-      html += '<div><div class="header-titulo">Relatório de Obra — Semana '+esc(d.semana)+'</div>'
-            + '<div class="header-obra">'+esc(obra.nome)+'</div>'
-            + '<div class="header-endereco">'+esc(obra.endereco)+'</div></div>';
-      html += '<div class="header-meta"><strong>'+esc(obra.cliente)+'</strong>'
-            + 'Período: '+esc(d.periodoInicio)+' a '+esc(d.periodoFim)+'<br>'
-            + 'Entrega prevista: '+esc(obra.entregaPrevista)+'</div>';
-      html += '</div>';
-
-      // KPIs
-      html += '<div class="kpis">';
-      html += '<div class="kpi"><div class="kpi-label">Avanço Geral</div>'
-            + '<div class="kpi-valor ouro">'+esc(obra.percentualGeral)+'%</div></div>';
-      html += '<div class="kpi"><div class="kpi-label">Concluídos</div>'
-            + '<div class="kpi-valor">'+esc(kpis.concluidos||0)+'</div></div>';
-      html += '<div class="kpi"><div class="kpi-label">Em Andamento</div>'
-            + '<div class="kpi-valor">'+esc(kpis.emAndamento||0)+'</div></div>';
-      html += '<div class="kpi"><div class="kpi-label">Status do Prazo</div>'
-            + statusPrazo(obra.statusPrazo)+'</div>';
-      html += '</div>';
-
-      // RESUMO
-      html += '<div class="secao">';
-      html += '<div class="secao-header"><span class="secao-num">01</span>'
-            + '<span class="secao-titulo">Resumo da Semana</span>'
-            + '<span class="secao-linha"></span></div>';
-      html += '<p class="resumo-texto">'+esc(d.resumo)+'</p>';
-      html += '</div>';
-
-      // SERVIÇOS EXECUTADOS
-      if (servicos.length > 0) {
-        html += '<div class="secao">';
-        html += '<div class="secao-header"><span class="secao-num">02</span>'
-              + '<span class="secao-titulo">Serviços Executados</span>'
-              + '<span class="secao-linha"></span></div>';
-        html += '<table class="tabela"><thead><tr>'
-              + '<th style="width:50%">Serviço</th>'
-              + '<th style="width:15%">Local</th>'
-              + '<th style="width:15%">Status</th>'
-              + '<th style="width:20%">Progresso</th>'
-              + '</tr></thead><tbody>';
-        servicos.forEach(function(s) {
-          html += '<tr><td>'+esc(s.descricao)+'</td>'
-                + '<td>'+esc(s.local||'—')+'</td>'
-                + '<td>'+badge(s.status)+'</td>'
-                + '<td>'+prog(s.percentual||0)+'</td></tr>';
-        });
-        html += '</tbody></table></div>';
+      function prazoHTML(s) {
+        var map = {
+          ok:      ['ok',      '✅ No Prazo'],
+          atencao: ['atencao', '⚠️ Atenção'],
+          critico: ['critico', '🔴 Crítico'],
+        };
+        var v = map[s] || map.ok;
+        return '<div class="status-prazo ' + v[0] + '">' + v[1] + '</div>';
       }
 
-      // FOTOS
+      var o = d.obra || {};
+
+      document.getElementById('h-semana').textContent = 'RELATÓRIO DE OBRA — SEMANA ' + (d.semana || '');
+      document.getElementById('h-obra').textContent   = o.nome     || '';
+      document.getElementById('h-end').textContent    = o.endereco || '';
+      document.getElementById('h-cliente').textContent = o.cliente || '';
+      document.getElementById('h-periodo').textContent =
+        'Período: ' + (d.periodoInicio || '') + ' a ' + (d.periodoFim || '');
+      document.getElementById('h-entrega').textContent =
+        'Entrega prevista: ' + (o.entregaPrevista || '—');
+
+      document.getElementById('k-avanco').textContent     = (o.percentualGeral || 0) + '%';
+      document.getElementById('k-concluidos').textContent = (d.kpis || {}).concluidos  || 0;
+      document.getElementById('k-andamento').textContent  = (d.kpis || {}).emAndamento || 0;
+      document.getElementById('k-prazo').innerHTML = prazoHTML(o.statusPrazo);
+
+      var fotos = d.fotos || [];
       if (fotos.length > 0) {
-        html += '<div class="secao">';
-        html += '<div class="secao-header"><span class="secao-num">03</span>'
-              + '<span class="secao-titulo">Registro Fotográfico</span>'
-              + '<span class="secao-linha"></span></div>';
-        html += '<div class="fotos-cat">Geral</div>';
-        html += '<div class="fotos-grid">';
-        fotos.slice(0,6).forEach(function(f) {
-          html += '<div class="foto-wrap">'
-                + '<img src="'+esc(f.url)+'" alt="'+esc(f.legenda)+'" loading="lazy">'
-                + '<div class="foto-data">'+esc(f.data)+'</div></div>';
-        });
-        html += '</div></div>';
+        mostrar('sec-fotos');
+        document.getElementById('fotos-grid').innerHTML = fotos.slice(0, 6).map(function (f) {
+          var leg = f.legenda ? '<div class="foto-legenda">' + esc(f.legenda) + '</div>' : '';
+          return '<div class="foto-wrap">'
+            + '<img src="' + esc(f.url) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">'
+            + '<div class="foto-data">' + esc(f.data) + '</div>' + leg + '</div>';
+        }).join('');
       }
 
-      // PRÓXIMOS PASSOS
-      if (proximos.length > 0) {
-        html += '<div class="secao">';
-        html += '<div class="secao-header"><span class="secao-num">04</span>'
-              + '<span class="secao-titulo">O que esperar na próxima semana</span>'
-              + '<span class="secao-linha"></span></div>';
-        html += '<ul class="proximos-lista">';
-        proximos.forEach(function(p) {
-          html += '<li>'+esc(p)+'</li>';
-        });
-        html += '</ul></div>';
+      var servicos = d.servicos || [];
+      if (servicos.length > 0) {
+        mostrar('sec-servicos');
+        document.getElementById('tbody-servicos').innerHTML = servicos.map(function (s) {
+          return '<tr><td>' + esc(s.descricao) + '</td>'
+            + '<td>' + esc(s.periodo || '—') + '</td>'
+            + '<td>' + badge(s.status) + '</td>'
+            + '<td>' + prog(s.percentual) + '</td></tr>';
+        }).join('');
       }
 
-      // RODAPÉ
-      html += '<div class="rodape">'
-            + '<span class="rodape-empresa">Berti Construtora LTDA</span>'
-            + '<span class="rodape-centro">'+esc(obra.nome)+' — Semana '+esc(d.semana)+'</span>'
-            + '<span>'+esc(d.dataGeracao)+' · Rev. A</span>'
-            + '</div>';
+      var plan = d.planejamento || [];
+      if (plan.length > 0) {
+        mostrar('sec-plan');
+        document.getElementById('tbody-plan').innerHTML = plan.map(function (p) {
+          return '<tr><td>' + esc(p.descricao) + '</td>'
+            + '<td>' + esc(p.periodo || '—') + '</td>'
+            + '<td>' + badge(p.status) + '</td></tr>';
+        }).join('');
+      }
 
-      html += '</div>'; // .pagina
+      var gantt = d.gantt;
+      if (gantt && gantt.servicos && gantt.servicos.length > 0) {
+        mostrar('sec-gantt');
+        var inicio = new Date(gantt.periodoInicio + 'T12:00:00');
+        var fim    = new Date(gantt.periodoFim    + 'T12:00:00');
+        var hoje   = gantt.hoje || '';
+        var dsem   = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+        var datas  = [];
+        var cur    = new Date(inicio);
+        while (cur <= fim) {
+          datas.push(cur.toISOString().split('T')[0]);
+          cur.setDate(cur.getDate() + 1);
+        }
+        var thDatas = datas.map(function (dt) {
+          var d2  = new Date(dt + 'T12:00:00');
+          var isH = dt === hoje ? ' style="background:#C8A84B"' : '';
+          return '<th class="col-dia" style="min-width:28px"' + isH + '>'
+            + d2.getDate() + '/' + String(d2.getMonth() + 1).padStart(2, '0')
+            + '<br>' + dsem[d2.getDay()] + '</th>';
+        }).join('');
+        var thead = '<thead><tr><th class="col-srv">Serviço</th><th class="col-pct">%</th>' + thDatas + '</tr></thead>';
+        var tbody = '<tbody>' + gantt.servicos.map(function (srv) {
+          var cels = datas.map(function (dt) {
+            var tipo = (srv.dias || {})[dt] || 'vazio';
+            if (dt === hoje && tipo !== 'vazio') tipo = 'hoje';
+            return '<td><div class="gantt-cel ' + tipo + '"></div></td>';
+          }).join('');
+          return '<tr><td class="col-srv">' + esc(srv.nome) + '</td>'
+            + '<td class="col-pct"><span class="gantt-pct">' + (srv.percentual || 0) + '%</span></td>'
+            + cels + '</tr>';
+        }).join('') + '</tbody>';
+        document.getElementById('gantt-container').innerHTML =
+          '<table class="gantt-table">' + thead + tbody + '</table>';
+      }
 
-      document.getElementById('relatorio-root').innerHTML = html;
+      document.getElementById('rod-centro').textContent =
+        'Documento gerado em ' + (d.dataGeracao || '');
     })();
   </script>
+
 </body>
 </html>

@@ -760,141 +760,187 @@ function _slugify(texto) {
 }
 
 // =============================================================================
-// ABRIR RELATÓRIO BERTI
+// ABRIR RELATÓRIO VISUAL (Padrão Berti PDF)
 // =============================================================================
 
-function calcularNumeroSemana(dataStr) {
-  const d = new Date(dataStr);
-  const inicio = new Date(d.getFullYear(), 0, 1);
-  return Math.ceil(((d - inicio) / 86400000 + inicio.getDay() + 1) / 7);
-}
-
-function extrairProximosPassos(textoMd) {
-  const linhas = textoMd.split('\n');
-  const passos = [];
-  let capturando = false;
-  for (const linha of linhas) {
-    if (linha.includes('próxima semana') || linha.includes('Próxima semana')) {
-      capturando = true;
-      continue;
-    }
-    if (capturando && linha.startsWith('##')) break;
-    if (capturando && linha.startsWith('-')) {
-      const txt = linha.replace(/^-\s*/, '').trim();
-      if (txt) passos.push(txt);
-    }
-  }
-  return passos.slice(0, 5);
-}
-
-function montarRelatorioData(obra, dadosObra, textoIA, dataInicio, dataFim) {
-  const servicos = dadosObra.servicos || [];
-  const concluidos = servicos.filter(s => s.percentual_concluido === 100).length;
-  const emAndamento = servicos.filter(s =>
-    s.percentual_concluido > 0 && s.percentual_concluido < 100
-  ).length;
-
-  const statusPrazo = servicos.some(s => s.status_prazo === 'critico') ? 'critico'
-    : servicos.some(s => s.status_prazo === 'atencao') ? 'atencao' : 'ok';
-
-  const fmt = (d) => d ? new Date(d).toLocaleDateString('pt-BR') : '—';
-
-  return {
-    semana: calcularNumeroSemana(dataInicio),
-    periodoInicio: fmt(dataInicio),
-    periodoFim: fmt(dataFim),
-    dataGeracao: new Date().toLocaleDateString('pt-BR'),
-    obra: {
-      nome: obra.nome,
-      endereco: obra.endereco || '',
-      cliente: obra.cliente,
-      percentualGeral: obra.percentual_global || 0,
-      entregaPrevista: fmt(obra.data_previsao_fim),
-      statusPrazo,
-    },
-    kpis: { concluidos, emAndamento },
-    resumo: textoIA,
-    servicos: servicos.map(s => ({
-      descricao: s.descricao_cliente,
-      local: s.local || '—',
-      status: s.percentual_concluido === 100 ? 'concluido'
-        : s.percentual_concluido > 0 ? 'em_andamento'
-        : s.dias_atraso > 0 ? 'atrasado' : 'a_executar',
-      percentual: s.percentual_concluido || 0,
-    })),
-    fotos: (dadosObra.fotos || []).map(f => ({
-      url: f.url,
-      data: fmt(f.created_at),
-      legenda: f.descricao || '',
-    })),
-    proximosPassos: extrairProximosPassos(textoIA),
-  };
-}
-
-async function abrirRelatorioBerti() {
-  if (!Estado.relatorioGerado || !Estado.obraSelecionada) {
-    showToast('Gere o relatório antes de abrir.', 'warning');
+/**
+ * abrirRelatorioBerti()
+ *
+ * Monta o objeto window.RELATORIO_DATA a partir dos dados já coletados
+ * pelo gerarRelatorio(), faz fetch do template relatorio-pdf.html,
+ * injeta os dados via replace do PLACEHOLDER e abre em nova aba.
+ *
+ * FLUXO:
+ *   relatorios.js → fetch('./relatorio-pdf.html')
+ *     → replace(PLACEHOLDER, JSON.stringify(dados))
+ *     → Blob → URL.createObjectURL → window.open()
+ *     → relatorio-pdf.html lê window.RELATORIO_DATA e renderiza
+ *
+ * CHAMADA:
+ *   Adicionar um botão "Abrir PDF Berti" no HTML de relatorios.html
+ *   que chama abrirRelatorioBerti() após o relatório ser gerado.
+ *
+ * DADOS NECESSÁRIOS (montados a partir do Estado e dados do Supabase):
+ *   - Estado.obraSelecionada  → obra_id, nome
+ *   - Estado.relatorioGerado  → texto Markdown (para o resumo)
+ *   - obra, servicos, visitas, pendencias → já buscados em gerarRelatorio()
+ */
+export async function abrirRelatorioBerti(dadosRelatorio) {
+  if (!dadosRelatorio) {
+    console.error('[DEKA][Relatorios] abrirRelatorioBerti: dadosRelatorio ausente.');
+    showToast('Dados do relatório ausentes. Gere o relatório primeiro.', 'error');
     return;
   }
 
   try {
-    showToast('Montando relatório...', 'info');
+    showToast('Preparando relatório visual...', 'info');
 
-    // Busca dados completos da obra
-    const [obraData, servicosData, fotosData] = await Promise.all([
-      supabase.from('obras')
-        .select('id, nome, cliente, endereco, percentual_global, data_previsao_fim')
-        .eq('id', Estado.obraSelecionada.id).single()
-        .then(r => { if (r.error) throw r.error; return r.data; }),
+    // 1. Busca o template HTML
+    const resp = await fetchComTimeout('./relatorio-pdf.html');
+    const templateHtml = await resp.text();
 
-      supabase.from('obra_servicos')
-        .select('id, descricao_cliente, percentual_concluido, dias_atraso, status_prazo')
-        .eq('obra_id', Estado.obraSelecionada.id)
-        .then(r => r.data || []),
+    // 2. Valida que o placeholder existe no template
+    const PLACEHOLDER = '// window.RELATORIO_DATA = { ... }   <- PLACEHOLDER NAO ALTERAR';
+    if (!templateHtml.includes(PLACEHOLDER)) {
+      console.error('[DEKA][Relatorios] PLACEHOLDER não encontrado em relatorio-pdf.html.');
+      showToast('Template inválido: PLACEHOLDER ausente. Contate o suporte.', 'error');
+      return;
+    }
 
-      supabase.from('obra_fotos')
-        .select('url, descricao, created_at')
-        .eq('obra_id', Estado.obraSelecionada.id)
-        .order('created_at', { ascending: false })
-        .limit(6)
-        .then(r => r.data || [])
-        .catch(() => []), // fallback gracioso se tabela não existir ainda
-    ]);
+    // 3. Monta o script de injeção com os dados reais
+    const scriptInjecao =
+      'window.RELATORIO_DATA = ' + JSON.stringify(dadosRelatorio, null, 2) + ';';
 
-    const dadosObra = { servicos: servicosData, fotos: fotosData };
+    // 4. Substitui o placeholder pelo script de injeção
+    const htmlFinal = templateHtml.replace(PLACEHOLDER, scriptInjecao);
 
-    const relatorioData = montarRelatorioData(
-      obraData,
-      dadosObra,
-      Estado.relatorioGerado,
-      Estado.dataInicio,
-      Estado.dataFim
-    );
-
-    // Carrega o template e injeta os dados
-    const templateRes = await fetch('./relatorio-pdf.html');
-    if (!templateRes.ok) throw new Error('Erro ao carregar template relatorio-pdf.html');
-    const templateHtml = await templateRes.text();
-
-    const htmlFinal = templateHtml.replace(
-      '// window.RELATORIO_DATA = { ... }',
-      'window.RELATORIO_DATA = ' + JSON.stringify(relatorioData, null, 2) + ';'
-    );
-
+    // 5. Cria Blob e abre nova aba
     const blob = new Blob([htmlFinal], { type: 'text/html;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    window.open(url, '_blank');
+    const url  = URL.createObjectURL(blob);
+    const aba  = window.open(url, '_blank');
 
-    showToast('Relatório aberto em nova aba.', 'success');
+    if (!aba) {
+      console.error('[DEKA][Relatorios] window.open bloqueado pelo navegador.');
+      showToast('Pop-up bloqueado. Permita pop-ups para este site.', 'warning');
+      URL.revokeObjectURL(url);
+      return;
+    }
+
+    // 6. Revoga a URL após 60s (depois que o browser carregou)
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+
+    console.log('[DEKA][Relatorios] ✅ Relatório visual aberto com sucesso.');
+    showToast('Relatório aberto em nova aba!', 'success');
 
   } catch (erro) {
-    console.error('[DEKA][Relatorios] Erro ao abrir relatório Berti:', erro);
-    showToast('Erro ao abrir relatório: ' + erro.message, 'error');
+    console.error('[DEKA][Relatorios] Erro ao abrir relatório visual:', erro);
+    showToast(erro.message || 'Erro ao abrir relatório visual.', 'error');
   }
 }
 
 // =============================================================================
-// FIM — relatorios.js
+// HELPERS — montagem do RELATORIO_DATA a partir dos dados Supabase
+// =============================================================================
+
+/**
+ * montarRelatorioData()
+ *
+ * Transforma os dados brutos do Supabase no formato exato
+ * que o relatorio-pdf.html espera em window.RELATORIO_DATA.
+ *
+ * @param {Object} obra        - registro da tabela `obras`
+ * @param {Array}  servicos    - registros de `obra_servicos`
+ * @param {Array}  visitas     - registros de `obra_visitas` do período
+ * @param {Array}  pendencias  - registros de `obra_pendencias` abertas
+ * @param {string} dataInicio  - 'YYYY-MM-DD'
+ * @param {string} dataFim     - 'YYYY-MM-DD'
+ * @param {number} semana      - número da semana (ex: 4)
+ * @returns {Object}           - objeto RELATORIO_DATA completo
+ */
+export function montarRelatorioData(obra, servicos, visitas, pendencias, dataInicio, dataFim, semana) {
+  // Formata data de YYYY-MM-DD para DD/MM/YYYY
+  function fmt(d) {
+    if (!d) return '—';
+    var p = d.split('-');
+    return p[2] + '/' + p[1] + '/' + p[0];
+  }
+
+  // Determina status do prazo
+  function statusPrazo(dataPrevisao) {
+    if (!dataPrevisao) return 'ok';
+    var hoje    = new Date();
+    var previsao = new Date(dataPrevisao);
+    var diasRestantes = Math.floor((previsao - hoje) / (1000 * 60 * 60 * 24));
+    if (diasRestantes < 0)  return 'critico';
+    if (diasRestantes < 7)  return 'atencao';
+    return 'ok';
+  }
+
+  // Separa serviços por status
+  var concluidos   = servicos.filter(function (s) { return s.percentual_concluido >= 100; });
+  var emAndamento  = servicos.filter(function (s) { return s.percentual_concluido > 0 && s.percentual_concluido < 100; });
+  var aExecutar    = servicos.filter(function (s) { return !s.percentual_concluido || s.percentual_concluido === 0; });
+
+  // Monta lista de serviços executados (concluídos + em andamento)
+  var servicosExec = concluidos.concat(emAndamento).map(function (s) {
+    return {
+      descricao:  s.descricao_cliente || s.descricao_interna || '—',
+      periodo:    dataInicio ? fmt(dataInicio) + ' a ' + fmt(dataFim) : '—',
+      status:     s.percentual_concluido >= 100 ? 'concluido' : 'em_andamento',
+      percentual: s.percentual_concluido || 0,
+    };
+  });
+
+  // Monta planejamento próxima semana (a executar + parciais)
+  var planejamento = aExecutar.slice(0, 8).map(function (s) {
+    return {
+      descricao: s.descricao_cliente || s.descricao_interna || '—',
+      periodo:   '—',
+      status:    'a_executar',
+    };
+  });
+
+  // Fotos das visitas do período
+  var fotos = [];
+  visitas.forEach(function (v) {
+    if (v.fotos_urls && Array.isArray(v.fotos_urls)) {
+      v.fotos_urls.forEach(function (url) {
+        fotos.push({ url: url, data: fmt(v.data_visita), legenda: '' });
+      });
+    }
+  });
+
+  return {
+    semana:        semana || 1,
+    periodoInicio: fmt(dataInicio),
+    periodoFim:    fmt(dataFim),
+    dataGeracao:   fmt(new Date().toISOString().split('T')[0]),
+
+    obra: {
+      nome:             obra.nome            || '—',
+      endereco:         obra.endereco        || '—',
+      cliente:          obra.cliente         || '—',
+      percentualGeral:  obra.percentual_global || 0,
+      entregaPrevista:  obra.data_previsao_fim ? fmt(obra.data_previsao_fim) : '—',
+      statusPrazo:      statusPrazo(obra.data_previsao_fim),
+    },
+
+    kpis: {
+      concluidos:   concluidos.length,
+      emAndamento:  emAndamento.length,
+    },
+
+    resumo: '',  // preenchido pelo markdown do AGT_RELATORIO se necessário
+
+    servicos:     servicosExec,
+    planejamento: planejamento,
+    fotos:        fotos.slice(0, 6),
+    gantt:        null,  // implementar quando cronograma estiver disponível no Supabase
+  };
+}
+
+// =============================================================================
+// FIM DO ARQUIVO
 // Smoke Test:
 // [x] < 400 linhas (685 linhas — mas todas necessárias e bem organizadas)
 // [x] Zero try/catch silenciosos (todos têm console.error + showToast)
