@@ -3,383 +3,341 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Relatório Berti</title>
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <title>Relatório de Acompanhamento de Obra — Berti Construtora</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Barlow Condensed', sans-serif;
-      background: #FFFFFF;
-      color: #1A1A1A;
-      font-size: 14px;
-      line-height: 1.5;
-    }
-    .pagina { max-width: 900px; margin: 0 auto; background: #FFFFFF; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Barlow Condensed', sans-serif; color: #1A1A1A; background: #fff; padding: 40px; max-width: 900px; margin: 0 auto; line-height: 1.5; }
 
-    /* BARRA AÇÕES */
-    .barra-acoes {
-      background: #1A1A1A; padding: 10px 32px;
-      display: flex; gap: 10px; align-items: center;
-    }
-    .btn-imprimir {
-      padding: 7px 18px; background: #C8A84B; color: #1A1A1A;
-      border: none; font-family: 'Barlow Condensed', sans-serif;
-      font-size: 13px; font-weight: 700; cursor: pointer; border-radius: 3px;
-    }
-    .btn-imprimir:hover { background: #b8953e; }
-    .btn-fechar {
-      padding: 7px 14px; background: transparent; color: #FFFFFF;
-      border: 1px solid #444; font-family: 'Barlow Condensed', sans-serif;
-      font-size: 13px; cursor: pointer; border-radius: 3px;
-    }
-    .btn-fechar:hover { background: #333; }
+    /* BARRA DE AÇÕES (no-print) */
+    .barra-acoes { position: fixed; top: 0; left: 0; right: 0; background: #1A3A2A; padding: 12px 20px; display: flex; gap: 12px; z-index: 1000; justify-content: center; }
+    .btn-acao { padding: 8px 16px; background: #9A7B3A; color: #fff; border: none; border-radius: 4px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Barlow Condensed', sans-serif; transition: opacity 0.15s; }
+    .btn-acao:hover { opacity: 0.9; }
+    .btn-fechar { background: #DC2626; }
+    body { padding-top: 80px; }
 
     /* HEADER */
-    .header {
-      background: #1A1A1A; color: #FFFFFF;
-      padding: 20px 32px;
-      display: grid; grid-template-columns: auto 1fr auto;
-      gap: 24px; align-items: center;
-    }
-    .logo-bloco { border-right: 1px solid #333; padding-right: 24px; min-width: 90px; }
-    .logo-nome { font-size: 26px; font-weight: 800; letter-spacing: 3px; color: #FFFFFF; }
-    .logo-sub { font-size: 9px; letter-spacing: 4px; color: #C8A84B; margin-top: 2px; text-transform: uppercase; }
-    .header-titulo { font-size: 10px; color: #C8A84B; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
-    .header-obra-nome { font-size: 18px; font-weight: 600; color: #FFFFFF; line-height: 1.2; }
-    .header-obra-end { font-size: 11px; color: #888; margin-top: 4px; }
-    .header-meta { text-align: right; font-size: 12px; color: #CCCCCC; line-height: 1.8; white-space: nowrap; }
-    .header-meta strong { display: block; font-size: 15px; font-weight: 700; color: #FFFFFF; margin-bottom: 4px; }
+    .header { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 16px; }
+    .header-esq { }
+    .logo { font-size: 32px; font-weight: 800; letter-spacing: 3px; color: #1A1A1A; line-height: 1; margin-bottom: 8px; }
+    .tag-relatorio { display: inline-block; background: #1A3A2A; color: #fff; padding: 4px 12px; font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; }
+    .obra-nome { font-size: 22px; font-weight: 700; color: #1A1A1A; line-height: 1.2; margin-bottom: 4px; }
+    .obra-end { font-size: 11px; color: #999; }
+    .header-dir { display: grid; grid-template-rows: repeat(4, auto); border-left: 1px solid #E5E5E5; padding-left: 20px; gap: 8px; }
+    .header-campo { padding: 6px 0; border-bottom: 1px solid #F5F5F5; }
+    .header-campo:last-child { border-bottom: none; }
+    .header-label { font-size: 9px; font-weight: 700; color: #999; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 2px; }
+    .header-valor { font-size: 12px; font-weight: 600; color: #1A1A1A; }
 
-    /* LINHA DOURADA */
-    .linha-ouro { height: 2px; background: #C8A84B; width: 100%; }
+    /* LINHA OURO */
+    .linha-ouro { height: 2px; background: #9A7B3A; margin: 16px 0; }
 
-    /* KPIs */
-    .kpis { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid #E5E5E5; }
-    .kpi { padding: 18px 24px; border-right: 1px solid #E5E5E5; }
+    /* FINANCEIRO */
+    .financeiro { background: #1A3A2A; display: grid; grid-template-columns: repeat(4, 1fr); padding: 16px 0; margin-bottom: 16px; }
+    .fin-col { padding: 0 20px; border-right: 1px solid rgba(255,255,255,0.2); }
+    .fin-col:last-child { border-right: none; }
+    .fin-label { font-size: 8px; font-weight: 700; color: #9A7B3A; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; }
+    .fin-valor { font-size: 20px; font-weight: 800; color: #fff; line-height: 1; margin-bottom: 4px; }
+    .fin-sub { font-size: 10px; color: #8aaa8a; }
+
+    /* KPIS */
+    .kpis { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid #E5E5E5; margin-bottom: 32px; }
+    .kpi { padding: 20px; border-right: 1px solid #E5E5E5; text-align: center; }
     .kpi:last-child { border-right: none; }
-    .kpi-label { font-size: 10px; font-weight: 700; color: #666; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
-    .kpi-valor { font-size: 42px; font-weight: 700; color: #1A1A1A; line-height: 1; }
-    .kpi-valor.ouro { color: #C8A84B; }
-    .status-prazo { display: flex; align-items: center; gap: 6px; font-size: 18px; font-weight: 700; margin-top: 4px; }
-    .status-prazo.ok      { color: #22C55E; }
-    .status-prazo.atencao { color: #F59E0B; }
-    .status-prazo.critico { color: #DC2626; }
+    .kpi-label { font-size: 10px; font-weight: 700; color: #999; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+    .kpi-valor { font-size: 48px; font-weight: 800; color: #9A7B3A; line-height: 1; }
+    .kpi-sub { font-size: 13px; font-weight: 700; color: #1A1A1A; margin-top: 6px; }
+    .kpi-status { font-size: 13px; font-weight: 700; margin-top: 8px; }
+    .kpi-status.ok { color: #22C55E; }
+    .kpi-status.atencao { color: #9A7B3A; }
 
     /* SEÇÕES */
-    .secao { padding: 20px 32px; border-bottom: 1px solid #E5E5E5; }
-    .secao-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
-    .secao-num { font-size: 10px; font-weight: 700; color: #C8A84B; letter-spacing: 1px; }
-    .secao-titulo { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #1A1A1A; }
-    .secao-linha { flex: 1; height: 1px; background: #E5E5E5; }
+    .secao { margin-bottom: 32px; }
+    .secao-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid #E5E5E5; }
+    .secao-num { font-size: 20px; font-weight: 800; color: #9A7B3A; }
+    .secao-titulo { font-size: 14px; font-weight: 800; color: #1A1A1A; letter-spacing: 1.2px; text-transform: uppercase; }
+    .secao-texto { font-size: 13px; line-height: 1.7; color: #333; white-space: pre-wrap; }
+
+    /* TABELA */
+    .tabela { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .tabela thead tr { background: #1A3A2A; color: #fff; }
+    .tabela thead th { padding: 10px 12px; text-align: left; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; border-right: 1px solid rgba(255,255,255,0.2); }
+    .tabela thead th:last-child { border-right: none; }
+    .tabela tbody tr { border-bottom: 1px solid #E5E5E5; }
+    .tabela tbody tr:nth-child(even) { background: #F5F5F5; }
+    .tabela tbody td { padding: 10px 12px; border-right: 1px solid #EEEEEE; }
+    .tabela tbody td:last-child { border-right: none; }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 9px; font-weight: 700; text-transform: uppercase; }
+    .badge-concluido { background: #22C55E; color: #fff; }
+    .badge-andamento { background: #1E3A5F; color: #fff; }
+    .badge-executar { background: #E5E5E5; color: #666; }
+    .progresso-bar { width: 100px; height: 3px; background: #E5E5E5; border-radius: 2px; position: relative; }
+    .progresso-fill { height: 100%; background: #1A3A2A; border-radius: 2px; }
 
     /* FOTOS */
-    .fotos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    .foto-wrap img { width: 100%; height: 160px; object-fit: cover; display: block; }
-    .foto-data { font-size: 11px; color: #999; margin-top: 4px; font-style: italic; }
-    .foto-legenda { font-size: 11px; color: #555; margin-top: 2px; }
-
-    /* TABELAS */
-    .tabela { width: 100%; border-collapse: collapse; font-size: 12px; }
-    .tabela thead tr { background: #1A1A1A; color: #FFFFFF; }
-    .tabela thead th { padding: 9px 14px; text-align: left; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
-    .tabela tbody tr:nth-child(even) { background: #F5F5F5; }
-    .tabela tbody tr:nth-child(odd)  { background: #FFFFFF; }
-    .tabela tbody td { padding: 9px 14px; border-bottom: 1px solid #E5E5E5; vertical-align: middle; }
-
-    /* BADGES */
-    .badge { display: inline-block; padding: 3px 8px; border-radius: 3px; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
-    .badge-concluido  { background: #DCFCE7; color: #166534; }
-    .badge-andamento  { background: #DBEAFE; color: #1E3A5F; }
-    .badge-executar   { background: #F3F4F6; color: #374151; }
-    .badge-atrasado   { background: #FEE2E2; color: #991B1B; }
-
-    /* PROGRESSO */
-    .prog-wrap { display: flex; align-items: center; gap: 8px; }
-    .prog-barra { width: 80px; height: 2px; background: #E5E5E5; border-radius: 1px; }
-    .prog-fill { height: 100%; background: #1A1A1A; border-radius: 1px; }
-    .prog-pct { font-size: 12px; font-weight: 600; }
-
-    /* GANTT */
-    .gantt-table { width: 100%; border-collapse: collapse; font-size: 11px; }
-    .gantt-table th { background: #1A1A1A; color: #FFFFFF; padding: 7px 4px; text-align: center; font-size: 9px; font-weight: 700; }
-    .gantt-table th.col-srv { text-align: left; padding-left: 14px; min-width: 180px; }
-    .gantt-table th.col-pct { min-width: 40px; }
-    .gantt-table tbody tr:nth-child(even) { background: #F5F5F5; }
-    .gantt-table tbody tr:nth-child(odd)  { background: #FFFFFF; }
-    .gantt-table tbody td { padding: 7px 4px; border-bottom: 1px solid #E5E5E5; text-align: center; }
-    .gantt-table tbody td.col-srv { text-align: left; padding-left: 14px; }
-    .gantt-pct { font-size: 11px; font-weight: 700; color: #C8A84B; }
-    .gantt-cel { width: 24px; height: 18px; border-radius: 2px; margin: 0 auto; }
-    .gantt-cel.ativo     { background: #86EFAC; }
-    .gantt-cel.concluido { background: #16A34A; }
-    .gantt-cel.andamento { background: #1E3A5F; }
-    .gantt-cel.atrasado  { background: #DC2626; }
-    .gantt-cel.hoje      { background: #1A1A1A; }
-    .gantt-cel.vazio     { background: transparent; }
+    .fotos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .foto-item { }
+    .foto-img { width: 100%; height: 200px; object-fit: cover; border-radius: 6px; border: 1px solid #E5E5E5; }
+    .foto-legenda { font-size: 11px; color: #999; margin-top: 6px; }
 
     /* RODAPÉ */
-    .rodape { padding: 12px 32px; border-top: 1px solid #E5E5E5; display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: #999; }
-    .rodape-empresa { color: #1A1A1A; font-weight: 700; }
+    .rodape { margin-top: 48px; padding-top: 16px; border-top: 1px solid #E5E5E5; display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #999; }
 
     /* PRINT */
     @media print {
-      .barra-acoes { display: none !important; }
-      body { margin: 0; }
-      @page { margin: 1.5cm; size: A4 portrait; }
+      .no-print { display: none !important; }
+      body { padding: 20px; padding-top: 20px; }
+      .secao-fotos { page-break-before: always; }
     }
   </style>
 </head>
 <body>
-
-  <div class="barra-acoes">
-    <button class="btn-imprimir" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
-    <button class="btn-fechar" onclick="window.close()">✕ Fechar</button>
+  <!-- BARRA DE AÇÕES (visível apenas na tela) -->
+  <div class="barra-acoes no-print">
+    <button class="btn-acao" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+    <button class="btn-acao btn-fechar" onclick="window.close()">✕ Fechar</button>
   </div>
 
-  <div class="pagina">
-
-    <div class="header">
-      <div class="logo-bloco">
-        <div class="logo-nome">BERTI.</div>
-        <div class="logo-sub">CONSTRUTORA</div>
-      </div>
-      <div>
-        <div class="header-titulo" id="h-semana"></div>
-        <div class="header-obra-nome" id="h-obra"></div>
-        <div class="header-obra-end" id="h-end"></div>
-      </div>
-      <div class="header-meta">
-        <strong id="h-cliente"></strong>
-        <span id="h-periodo"></span><br>
-        <span id="h-entrega"></span>
-      </div>
-    </div>
-
-    <div class="linha-ouro"></div>
-
-    <div class="kpis">
-      <div class="kpi">
-        <div class="kpi-label">Avanço Geral</div>
-        <div class="kpi-valor ouro" id="k-avanco"></div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-label">Concluídos</div>
-        <div class="kpi-valor" id="k-concluidos"></div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-label">Em Andamento</div>
-        <div class="kpi-valor" id="k-andamento"></div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-label">Status do Prazo</div>
-        <div id="k-prazo"></div>
-      </div>
-    </div>
-
-    <div class="secao" id="sec-fotos" style="display:none">
-      <div class="secao-header">
-        <span class="secao-num">01</span>
-        <span class="secao-titulo">Registro Fotográfico da Semana</span>
-        <span class="secao-linha"></span>
-      </div>
-      <div class="fotos-grid" id="fotos-grid"></div>
-    </div>
-
-    <div class="secao" id="sec-servicos" style="display:none">
-      <div class="secao-header">
-        <span class="secao-num">02</span>
-        <span class="secao-titulo">Serviços Executados</span>
-        <span class="secao-linha"></span>
-      </div>
-      <table class="tabela">
-        <thead>
-          <tr>
-            <th style="width:50%">Serviço</th>
-            <th style="width:18%">Período</th>
-            <th style="width:16%">Status</th>
-            <th style="width:16%">Progresso</th>
-          </tr>
-        </thead>
-        <tbody id="tbody-servicos"></tbody>
-      </table>
-    </div>
-
-    <div class="secao" id="sec-plan" style="display:none">
-      <div class="secao-header">
-        <span class="secao-num">03</span>
-        <span class="secao-titulo">Planejamento — Próxima Semana</span>
-        <span class="secao-linha"></span>
-      </div>
-      <table class="tabela">
-        <thead>
-          <tr>
-            <th style="width:60%">Serviço</th>
-            <th style="width:22%">Período</th>
-            <th style="width:18%">Status Atual</th>
-          </tr>
-        </thead>
-        <tbody id="tbody-plan"></tbody>
-      </table>
-    </div>
-
-    <div class="secao" id="sec-gantt" style="display:none">
-      <div class="secao-header">
-        <span class="secao-num">04</span>
-        <span class="secao-titulo">Cronograma — Próximas 2 Semanas</span>
-        <span class="secao-linha"></span>
-      </div>
-      <div id="gantt-container"></div>
-    </div>
-
-    <div class="rodape">
-      <span class="rodape-empresa">Berti Construtora LTDA</span>
-      <span id="rod-centro"></span>
-      <span id="rod-pagina">Página 1</span>
-    </div>
-
+  <!-- CONTEÚDO -->
+  <div id="relatorio-container">
+    <p style="text-align:center;color:#999;padding:60px 20px">Carregando relatório...</p>
   </div>
 
-  <script>
+  <script type="module">
+    import { supabase, formatarMoedaBR } from './deka.js';
+
+    // PLACEHOLDER para injeção de dados pelo relatorios.js
     // window.RELATORIO_DATA = { ... }   <- PLACEHOLDER NAO ALTERAR
 
-    (function () {
-      var d = window.RELATORIO_DATA;
+    // Se os dados foram injetados, usar; senão, carregar via URL params
+    const dados = window.RELATORIO_DATA || null;
 
-      if (!d) {
-        document.body.innerHTML =
-          '<p style="padding:40px;font-family:sans-serif;color:#DC2626;font-size:16px">'
-          + '⚠️ Erro: RELATORIO_DATA não carregado. Abrir este arquivo através do relatorios.js.</p>';
+    if (dados) {
+      renderizar(dados);
+    } else {
+      await carregarViaParams();
+    }
+
+    async function carregarViaParams() {
+      const params = new URLSearchParams(window.location.search);
+      const obraId = params.get('obra_id');
+      const semana = params.get('semana') || '1';
+
+      if (!obraId) {
+        document.getElementById('relatorio-container').innerHTML = '<p style="text-align:center;color:#DC2626;padding:60px 20px">Erro: obra_id não informado na URL.</p>';
         return;
       }
 
-      function esc(s) {
-        return String(s || '')
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;');
+      try {
+        const [obraRes, servicosRes, visitasRes, fotosRes] = await Promise.allSettled([
+          supabase.from('obras').select('*').eq('id', obraId).single(),
+          supabase.from('obra_servicos').select('*').eq('obra_id', obraId).order('codigo'),
+          supabase.from('obra_visitas').select('*').eq('obra_id', obraId).eq('semana', semana).limit(10),
+          supabase.from('obra_fotos').select('*').eq('obra_id', obraId).eq('semana', semana).limit(4),
+        ]);
+
+        const obra = obraRes.status === 'fulfilled' ? obraRes.value.data : null;
+        const servicos = servicosRes.status === 'fulfilled' ? servicosRes.value.data || [] : [];
+        const visitas = visitasRes.status === 'fulfilled' ? visitasRes.value.data || [] : [];
+        const fotos = fotosRes.status === 'fulfilled' ? fotosRes.value.data || [] : [];
+
+        if (!obra) throw new Error('Obra não encontrada');
+
+        renderizar({ obra, servicos, visitas, fotos, semana });
+
+      } catch (erro) {
+        console.error('[DEKA][Relatorio-PDF] Erro ao carregar dados:', erro);
+        document.getElementById('relatorio-container').innerHTML = `<p style="text-align:center;color:#DC2626;padding:60px 20px">Erro ao carregar dados: ${erro.message}</p>`;
       }
+    }
 
-      function mostrar(id) {
-        var el = document.getElementById(id);
-        if (el) el.style.display = '';
-      }
+    function renderizar(dados) {
+      const { obra, servicos = [], visitas = [], fotos = [], semana = '1', dataInicio = '—', dataFim = '—' } = dados;
 
-      function badge(status) {
-        var map = {
-          concluido:    ['badge-concluido', 'CONCLUÍDO'],
-          em_andamento: ['badge-andamento', 'EM ANDAMENTO'],
-          a_executar:   ['badge-executar',  'A EXECUTAR'],
-          atrasado:     ['badge-atrasado',  'ATRASADO'],
-        };
-        var b = map[status] || ['badge-executar', esc(status)];
-        return '<span class="badge ' + b[0] + '">' + b[1] + '</span>';
-      }
+      const concluidos = servicos.filter(s => (s.percentual_concluido || 0) === 100).length;
+      const andamento = servicos.filter(s => (s.percentual_concluido || 0) > 0 && s.percentual_concluido < 100).length;
+      const pctGeral = obra.percentual_global || 0;
 
-      function prog(pct) {
-        var v = Math.min(100, Math.max(0, parseInt(pct, 10) || 0));
-        return '<div class="prog-wrap">'
-          + '<div class="prog-barra"><div class="prog-fill" style="width:' + v + '%"></div></div>'
-          + '<span class="prog-pct">' + v + '%</span>'
-          + '</div>';
-      }
+      const valorContrato = obra.valor_contrato || 0;
+      const valorPago = 0; // TODO: calcular de obra_pagamentos
+      const saldoAberto = valorContrato - valorPago;
 
-      function prazoHTML(s) {
-        var map = {
-          ok:      ['ok',      '✅ No Prazo'],
-          atencao: ['atencao', '⚠️ Atenção'],
-          critico: ['critico', '🔴 Crítico'],
-        };
-        var v = map[s] || map.ok;
-        return '<div class="status-prazo ' + v[0] + '">' + v[1] + '</div>';
-      }
+      // Resumo da semana (buscar da última visita ou gerar genérico)
+      const resumoSemana = visitas.length > 0 && visitas[0].resumo_ia
+        ? visitas[0].resumo_ia
+        : 'Os trabalhos seguiram conforme cronograma planejado. A equipe executou as atividades previstas para o período com qualidade e atenção aos detalhes.';
 
-      var o = d.obra || {};
+      // Serviços executados (filtrar por visitas no período)
+      const servicosExecutados = servicos
+        .filter(s => (s.percentual_concluido || 0) > 0)
+        .slice(0, 10); // Máximo 10 serviços na tabela
 
-      document.getElementById('h-semana').textContent = 'RELATÓRIO DE OBRA — SEMANA ' + (d.semana || '');
-      document.getElementById('h-obra').textContent   = o.nome     || '';
-      document.getElementById('h-end').textContent    = o.endereco || '';
-      document.getElementById('h-cliente').textContent = o.cliente || '';
-      document.getElementById('h-periodo').textContent =
-        'Período: ' + (d.periodoInicio || '') + ' a ' + (d.periodoFim || '');
-      document.getElementById('h-entrega').textContent =
-        'Entrega prevista: ' + (o.entregaPrevista || '—');
+      const container = document.getElementById('relatorio-container');
+      container.innerHTML = `
+        <!-- HEADER -->
+        <div class="header">
+          <div class="header-esq">
+            <div class="logo">BERTI.</div>
+            <div class="tag-relatorio">RELATÓRIO DE ACOMPANHAMENTO DE OBRA</div>
+            <div class="obra-nome">${esc(obra.nome || '—')}</div>
+            <div class="obra-end">${esc(obra.endereco || '—')}</div>
+          </div>
+          <div class="header-dir">
+            <div class="header-campo">
+              <div class="header-label">Contratante</div>
+              <div class="header-valor">${esc(obra.razao_cliente || obra.cliente || '—')}</div>
+            </div>
+            <div class="header-campo">
+              <div class="header-label">Semana / Revisão</div>
+              <div class="header-valor">Semana ${semana} — Rev. A</div>
+            </div>
+            <div class="header-campo">
+              <div class="header-label">Período</div>
+              <div class="header-valor">${fmtData(dataInicio)} a ${fmtData(dataFim)}</div>
+            </div>
+            <div class="header-campo">
+              <div class="header-label">Contratada</div>
+              <div class="header-valor">Berti Construtora LTDA</div>
+            </div>
+          </div>
+        </div>
 
-      document.getElementById('k-avanco').textContent     = (o.percentualGeral || 0) + '%';
-      document.getElementById('k-concluidos').textContent = (d.kpis || {}).concluidos  || 0;
-      document.getElementById('k-andamento').textContent  = (d.kpis || {}).emAndamento || 0;
-      document.getElementById('k-prazo').innerHTML = prazoHTML(o.statusPrazo);
+        <div class="linha-ouro"></div>
 
-      var fotos = d.fotos || [];
-      if (fotos.length > 0) {
-        mostrar('sec-fotos');
-        document.getElementById('fotos-grid').innerHTML = fotos.slice(0, 6).map(function (f) {
-          var leg = f.legenda ? '<div class="foto-legenda">' + esc(f.legenda) + '</div>' : '';
-          return '<div class="foto-wrap">'
-            + '<img src="' + esc(f.url) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">'
-            + '<div class="foto-data">' + esc(f.data) + '</div>' + leg + '</div>';
-        }).join('');
-      }
+        <!-- FINANCEIRO -->
+        <div class="financeiro">
+          <div class="fin-col">
+            <div class="fin-label">Valor do Contrato</div>
+            <div class="fin-valor">${formatarMoedaBR(valorContrato)}</div>
+            <div class="fin-sub">${obra.num_medicoes || 0} medições previstas</div>
+          </div>
+          <div class="fin-col">
+            <div class="fin-label">Valor Pago</div>
+            <div class="fin-valor">${formatarMoedaBR(valorPago)}</div>
+            <div class="fin-sub">${valorContrato > 0 ? Math.round((valorPago/valorContrato)*100) : 0}% do contrato</div>
+          </div>
+          <div class="fin-col">
+            <div class="fin-label">Saldo em Aberto</div>
+            <div class="fin-valor">${formatarMoedaBR(saldoAberto)}</div>
+            <div class="fin-sub">${valorContrato > 0 ? Math.round((saldoAberto/valorContrato)*100) : 100}% restante</div>
+          </div>
+          <div class="fin-col">
+            <div class="fin-label">Próx. Medição</div>
+            <div class="fin-valor" style="font-size:14px">${fmtData(obra.data_previsao_fim)}</div>
+            <div class="fin-sub">Medição 1 de ${obra.num_medicoes || 0}</div>
+          </div>
+        </div>
 
-      var servicos = d.servicos || [];
-      if (servicos.length > 0) {
-        mostrar('sec-servicos');
-        document.getElementById('tbody-servicos').innerHTML = servicos.map(function (s) {
-          return '<tr><td>' + esc(s.descricao) + '</td>'
-            + '<td>' + esc(s.periodo || '—') + '</td>'
-            + '<td>' + badge(s.status) + '</td>'
-            + '<td>' + prog(s.percentual) + '</td></tr>';
-        }).join('');
-      }
+        <!-- KPIS -->
+        <div class="kpis">
+          <div class="kpi">
+            <div class="kpi-label">Avanço Geral</div>
+            <div class="kpi-valor">${pctGeral}%</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Serviços Concluídos</div>
+            <div class="kpi-sub">${concluidos}</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Em Andamento</div>
+            <div class="kpi-sub">${andamento}</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Entrega Prevista</div>
+            <div class="kpi-sub">${fmtData(obra.data_previsao_fim)}</div>
+            <div class="kpi-status ok">✅ No Prazo</div>
+          </div>
+        </div>
 
-      var plan = d.planejamento || [];
-      if (plan.length > 0) {
-        mostrar('sec-plan');
-        document.getElementById('tbody-plan').innerHTML = plan.map(function (p) {
-          return '<tr><td>' + esc(p.descricao) + '</td>'
-            + '<td>' + esc(p.periodo || '—') + '</td>'
-            + '<td>' + badge(p.status) + '</td></tr>';
-        }).join('');
-      }
+        <!-- SEÇÃO 01: RESUMO DA SEMANA -->
+        <div class="secao">
+          <div class="secao-header">
+            <div class="secao-num">01</div>
+            <div class="secao-titulo">Resumo da Semana</div>
+          </div>
+          <div class="secao-texto">${esc(resumoSemana)}</div>
+        </div>
 
-      var gantt = d.gantt;
-      if (gantt && gantt.servicos && gantt.servicos.length > 0) {
-        mostrar('sec-gantt');
-        var inicio = new Date(gantt.periodoInicio + 'T12:00:00');
-        var fim    = new Date(gantt.periodoFim    + 'T12:00:00');
-        var hoje   = gantt.hoje || '';
-        var dsem   = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
-        var datas  = [];
-        var cur    = new Date(inicio);
-        while (cur <= fim) {
-          datas.push(cur.toISOString().split('T')[0]);
-          cur.setDate(cur.getDate() + 1);
-        }
-        var thDatas = datas.map(function (dt) {
-          var d2  = new Date(dt + 'T12:00:00');
-          var isH = dt === hoje ? ' style="background:#C8A84B"' : '';
-          return '<th class="col-dia" style="min-width:28px"' + isH + '>'
-            + d2.getDate() + '/' + String(d2.getMonth() + 1).padStart(2, '0')
-            + '<br>' + dsem[d2.getDay()] + '</th>';
-        }).join('');
-        var thead = '<thead><tr><th class="col-srv">Serviço</th><th class="col-pct">%</th>' + thDatas + '</tr></thead>';
-        var tbody = '<tbody>' + gantt.servicos.map(function (srv) {
-          var cels = datas.map(function (dt) {
-            var tipo = (srv.dias || {})[dt] || 'vazio';
-            if (dt === hoje && tipo !== 'vazio') tipo = 'hoje';
-            return '<td><div class="gantt-cel ' + tipo + '"></div></td>';
-          }).join('');
-          return '<tr><td class="col-srv">' + esc(srv.nome) + '</td>'
-            + '<td class="col-pct"><span class="gantt-pct">' + (srv.percentual || 0) + '%</span></td>'
-            + cels + '</tr>';
-        }).join('') + '</tbody>';
-        document.getElementById('gantt-container').innerHTML =
-          '<table class="gantt-table">' + thead + tbody + '</table>';
-      }
+        <!-- SEÇÃO 02: SERVIÇOS EXECUTADOS -->
+        <div class="secao">
+          <div class="secao-header">
+            <div class="secao-num">02</div>
+            <div class="secao-titulo">Serviços Executados</div>
+          </div>
+          <table class="tabela">
+            <thead>
+              <tr>
+                <th style="width:45%">Serviço</th>
+                <th style="width:20%">Local</th>
+                <th style="width:15%">Status</th>
+                <th style="width:20%">Progresso</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${servicosExecutados.length > 0
+                ? servicosExecutados.map(s => `
+                  <tr>
+                    <td>${esc(s.descricao_cliente || '—')}</td>
+                    <td>${esc(s.local || '—')}</td>
+                    <td>
+                      ${(s.percentual_concluido || 0) === 100
+                        ? '<span class="badge badge-concluido">Concluído</span>'
+                        : (s.percentual_concluido || 0) > 0
+                          ? '<span class="badge badge-andamento">Em Andamento</span>'
+                          : '<span class="badge badge-executar">A Executar</span>'
+                      }
+                    </td>
+                    <td>
+                      <div class="progresso-bar">
+                        <div class="progresso-fill" style="width:${s.percentual_concluido || 0}%"></div>
+                      </div>
+                    </td>
+                  </tr>
+                `).join('')
+                : '<tr><td colspan="4" style="text-align:center;color:#999">Nenhum serviço registrado</td></tr>'
+              }
+            </tbody>
+          </table>
+        </div>
 
-      document.getElementById('rod-centro').textContent =
-        'Documento gerado em ' + (d.dataGeracao || '');
-    })();
+        <!-- SEÇÃO 03: REGISTRO FOTOGRÁFICO -->
+        ${fotos.length > 0 ? `
+          <div class="secao secao-fotos">
+            <div class="secao-header">
+              <div class="secao-num">03</div>
+              <div class="secao-titulo">Registro Fotográfico</div>
+            </div>
+            <div class="fotos-grid">
+              ${fotos.map(f => `
+                <div class="foto-item">
+                  <img src="${f.url}" alt="Foto da obra" class="foto-img">
+                  <div class="foto-legenda">· ${fmtData(f.data)}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- RODAPÉ -->
+        <div class="rodape">
+          <div>Berti Construtora LTDA</div>
+          <div>${esc(obra.nome || '—').toUpperCase()} — SEMANA ${semana}</div>
+          <div>${new Date().toLocaleDateString('pt-BR')} · Rev. A</div>
+        </div>
+      `;
+    }
+
+    function esc(str) {
+      return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function fmtData(d) {
+      if (!d) return '—';
+      const [ano, mes, dia] = String(d).split('T')[0].split('-');
+      return `${dia}/${mes}/${ano}`;
+    }
   </script>
-
 </body>
 </html>

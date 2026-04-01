@@ -167,7 +167,7 @@ function _configurarEventos() {
   Estado.btnImprimir.addEventListener('click', _imprimirRelatorio);
   Estado.btnCopiar.addEventListener('click', _copiarTexto);
   Estado.btnNovo.addEventListener('click', _resetUI);
-  Estado.btnAbrirBerti.addEventListener('click', abrirRelatorioBerti);
+  Estado.btnAbrirBerti.addEventListener('click', () => abrirRelatorioBerti(Estado.relatorioData));
 }
 
 // =============================================================================
