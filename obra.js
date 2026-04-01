@@ -1,590 +1,611 @@
 /**
  * DEKA OS v2.0 — obra.js
  * ─────────────────────────────────────────────────────────────────────────────
- * Tela de detalhe de uma obra específica.
- * Acessada via: obra.html?id=<uuid>
+ * Módulo: Detalhe e Edição de Obra
  *
- * FUNCIONALIDADES:
- *   - Extração e validação de UUID da URL
- *   - Carregamento paralelo de: obras, obra_servicos, obra_pendencias, obra_visitas
- *   - Renderização em blocos: cabeçalho, serviços, pendências, timeline de visitas
- *   - Modo degradado: exibe dados parciais se alguma consulta falhar
- *   - Redirecionamento automático para hub.html se obra não existir
+ * MODOS:
+ *   ?id=<uuid>    → carregar obra existente (visualizar + editar)
+ *   ?novo=true    → formulário em branco (criar nova obra)
  *
- * REGRAS DEKA OS APLICADAS:
- *   - Apenas 1 DOMContentLoaded (init)
- *   - Todo catch tem console.error + showToast
- *   - Promise.allSettled para carregamento resiliente
- *   - Códigos internos (SRV-*, EQ-*) NUNCA exibidos na UI
- *   - Supabase como única fonte (zero localStorage para dados de obra)
+ * TABELAS SUPABASE:
+ *   obras         (read + write)
+ *   obra_servicos (read-only)
+ *
+ * REGRAS DEKA OS:
+ *   - Zero DOMContentLoaded aqui (exclusivo do deka.js)
+ *   - Cache obra: 5min (chave: obra_<id>)
+ *   - Cache servicos: 5min (chave: servicos_<id>)
  */
-
-// =============================================================================
-// SEÇÃO 1 — IMPORTS E CONSTANTES
-// =============================================================================
 
 import {
   supabase,
   showToast,
+  cacheGet,
+  cacheSet,
   formatarDataBR,
   formatarMoedaBR,
-  truncar
 } from './deka.js';
 
-/** Regex para validação de UUID (permissiva — aceita qualquer versão) */
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// =============================================================================
+// CONSTANTES
+// =============================================================================
 
-/** Mapeamento de prioridades para cores e ícones */
-const PRIORIDADE_CONFIG = {
-  critica: { cor: '#c0392b', icone: '🔴', label: 'Crítica' },
-  alta:    { cor: '#e67e22', icone: '🟠', label: 'Alta' },
-  media:   { cor: '#f39c12', icone: '🟡', label: 'Média' },
-  baixa:   { cor: '#3498db', icone: '🔵', label: 'Baixa' },
+const CAMPOS_OBRA_SERVICOS = [
+  'id', 'codigo', 'descricao_cliente', 'categoria', 'setor',
+  'status', 'percentual_concluido', 'data_inicio', 'data_fim', 'dias_marcados',
+].join(',');
+
+// =============================================================================
+// ESTADO
+// =============================================================================
+
+const Estado = {
+  obraId:   null,
+  modoNovo: false,
+  obra:     null,
+  servicos: [],
+  tabAtiva: 'visao-geral',
 };
 
-/** Mapeamento de status de obra para badges */
-const STATUS_OBRA_CONFIG = {
-  ativa:     { cor: '#1a7f4b', label: 'Ativa' },
-  pausada:   { cor: '#b7701a', label: 'Pausada' },
-  concluida: { cor: '#5a6c7d', label: 'Concluída' },
-};
-
 // =============================================================================
-// SEÇÃO 2 — EXTRAÇÃO E VALIDAÇÃO DO ID DA URL
+// INICIALIZAÇÃO
 // =============================================================================
 
-/**
- * Extrai e valida o UUID da obra na URL.
- *
- * @returns {string|null} UUID válido ou null se ausente/inválido
- */
-function extrairObraId() {
-  const params = new URLSearchParams(window.location.search);
-  const id = params.get('id')?.trim();
+export async function init() {
+  console.log('[DEKA][Obra] Inicializando...');
 
-  if (!id || !UUID_REGEX.test(id)) {
-    return null;
-  }
+  const params   = new URLSearchParams(window.location.search);
+  Estado.obraId  = params.get('id');
+  Estado.modoNovo = params.get('novo') === 'true';
 
-  return id;
-}
+  _configurarTabs();
 
-// =============================================================================
-// SEÇÃO 3 — CONSULTAS AO SUPABASE
-// =============================================================================
-
-/**
- * Busca os dados base da obra.
- *
- * @param {string} obraId UUID da obra
- * @returns {Promise<Object>} Dados da obra ou lança erro
- * @throws {Error} Se obra não existir ou consulta falhar
- */
-async function buscarObraBase(obraId) {
-  const { data: obra, error } = await supabase
-    .from('obras')
-    .select('id, nome, cliente, endereco, data_inicio, data_previsao_fim, status, percentual_global')
-    .eq('id', obraId)
-    .single();
-
-  if (error) {
-    console.error('[DEKA][Obra] Erro ao buscar obra base:', error);
-    throw new Error(`Erro ao buscar obra: ${error.message}`);
-  }
-
-  if (!obra) {
-    throw new Error('Obra não encontrada no sistema.');
-  }
-
-  return obra;
-}
-
-/**
- * Busca todos os serviços da obra.
- *
- * @param {string} obraId UUID da obra
- * @returns {Promise<Array>} Lista de serviços (pode ser vazia)
- */
-async function buscarServicos(obraId) {
-  const { data: servicos, error } = await supabase
-    .from('obra_servicos')
-    .select('id, codigo, descricao_interna, descricao_cliente, equipe_codigo, percentual_concluido, valor_contratado')
-    .eq('obra_id', obraId)
-    .order('created_at', { ascending: true });
-
-  if (error) {
-    console.error('[DEKA][Obra] Erro ao buscar serviços:', error);
-    throw new Error(`Erro ao buscar serviços: ${error.message}`);
-  }
-
-  return servicos || [];
-}
-
-/**
- * Busca pendências ativas da obra (status != 'resolvida').
- *
- * @param {string} obraId UUID da obra
- * @returns {Promise<Array>} Lista de pendências ordenadas por prioridade
- */
-async function buscarPendencias(obraId) {
-  const { data: pendencias, error } = await supabase
-    .from('obra_pendencias')
-    .select('id, descricao, prioridade, responsavel, status, created_at')
-    .eq('obra_id', obraId)
-    .neq('status', 'resolvida')
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error('[DEKA][Obra] Erro ao buscar pendências:', error);
-    throw new Error(`Erro ao buscar pendências: ${error.message}`);
-  }
-
-  // Ordena por prioridade (crítica → baixa) e depois por data
-  const ordemPrioridade = { critica: 1, alta: 2, media: 3, baixa: 4 };
-  return (pendencias || []).sort((a, b) => {
-    const prioA = ordemPrioridade[a.prioridade] || 999;
-    const prioB = ordemPrioridade[b.prioridade] || 999;
-    if (prioA !== prioB) return prioA - prioB;
-    return new Date(b.created_at) - new Date(a.created_at);
-  });
-}
-
-/**
- * Busca as últimas 5 visitas registradas na obra.
- *
- * @param {string} obraId UUID da obra
- * @returns {Promise<Array>} Lista de visitas (pode ser vazia)
- */
-async function buscarVisitas(obraId) {
-  const { data: visitas, error } = await supabase
-    .from('obra_visitas')
-    .select('id, data_visita, resumo_ia, status_sync')
-    .eq('obra_id', obraId)
-    .order('data_visita', { ascending: false })
-    .limit(5);
-
-  if (error) {
-    console.error('[DEKA][Obra] Erro ao buscar visitas:', error);
-    throw new Error(`Erro ao buscar visitas: ${error.message}`);
-  }
-
-  return visitas || [];
-}
-
-// =============================================================================
-// SEÇÃO 4 — COORDENAÇÃO DE CARREGAMENTO
-// =============================================================================
-
-/**
- * Carrega todos os dados da obra em paralelo (modo resiliente).
- *
- * Comportamento:
- *   - obra_base: se falhar, aborta tudo (obra não existe)
- *   - servicos/pendencias/visitas: se falhar, loga warning e retorna array vazio
- *
- * @param {string} obraId UUID da obra
- * @returns {Promise<Object>} { obra, servicos, pendencias, visitas }
- * @throws {Error} Apenas se obra base não existir
- */
-async function carregarObraCompleta(obraId) {
-  // Passo 1: busca obra base (CRÍTICO — aborta se falhar)
-  let obra;
-  try {
-    obra = await buscarObraBase(obraId);
-  } catch (erro) {
-    console.warn('[DEKA][Obra] Obra não encontrada no Supabase. Bloqueando acesso e redirecionando. UUID:', obraId);
-    console.error('[DEKA][Obra] Falha crítica ao buscar obra base:', erro);
-    showToast(
-      'Obra não encontrada. Redirecionando para o hub...',
-      'error',
-      { persistir: true }
-    );
-    setTimeout(() => { window.location.href = '/hub.html'; }, 3000);
-    throw erro; // Bloqueia execução
-  }
-
-  // Passo 2: busca dados relacionados (NÃO-CRÍTICO — modo degradado)
-  const [resultServicos, resultPendencias, resultVisitas] = await Promise.allSettled([
-    buscarServicos(obraId),
-    buscarPendencias(obraId),
-    buscarVisitas(obraId),
-  ]);
-
-  // Extrai dados ou array vazio se falhar
-  const servicos = resultServicos.status === 'fulfilled'
-    ? resultServicos.value
-    : (console.error('[DEKA][Obra] Falha ao buscar serviços:', resultServicos.reason), []);
-
-  const pendencias = resultPendencias.status === 'fulfilled'
-    ? resultPendencias.value
-    : (console.error('[DEKA][Obra] Falha ao buscar pendências:', resultPendencias.reason), []);
-
-  const visitas = resultVisitas.status === 'fulfilled'
-    ? resultVisitas.value
-    : (console.error('[DEKA][Obra] Falha ao buscar visitas:', resultVisitas.reason), []);
-
-  // Exibe warning se algum dado falhou (mas não bloqueia)
-  const falhas = [
-    resultServicos.status === 'rejected' && 'serviços',
-    resultPendencias.status === 'rejected' && 'pendências',
-    resultVisitas.status === 'rejected' && 'visitas',
-  ].filter(Boolean);
-
-  if (falhas.length > 0) {
-    showToast(
-      `Atenção: não foi possível carregar ${falhas.join(', ')} desta obra.`,
-      'warning'
-    );
-  }
-
-  return { obra, servicos, pendencias, visitas };
-}
-
-// =============================================================================
-// SEÇÃO 5 — RENDERIZAÇÃO
-// =============================================================================
-
-/**
- * Renderiza o cabeçalho da obra (card principal).
- *
- * @param {Object} obra Dados da tabela obras
- */
-function renderizarCabecalho(obra) {
-  const container = document.getElementById('obra-cabecalho');
-  if (!container) {
-    console.error('[DEKA][Obra] Container #obra-cabecalho não encontrado no HTML.');
+  if (Estado.modoNovo) {
+    _mostrarModoNovo();
     return;
   }
 
-  const statusConfig = STATUS_OBRA_CONFIG[obra.status] || STATUS_OBRA_CONFIG.ativa;
+  if (!Estado.obraId) {
+    _mostrarErro('ID da obra não informado.');
+    return;
+  }
 
-  container.innerHTML = `
-    <div class="obra-header-card">
-      <div class="obra-header-top">
-        <h1 class="obra-nome">${escapeHtml(obra.nome)}</h1>
-        <span class="obra-status-badge" style="background: ${statusConfig.cor};">
-          ${statusConfig.label}
-        </span>
-      </div>
+  await carregarObra();
+  console.log('[DEKA][Obra] ✅ Inicializado.');
+}
 
-      <div class="obra-info-grid">
-        <div class="obra-info-item">
-          <span class="obra-info-label">Cliente</span>
-          <span class="obra-info-valor">${escapeHtml(obra.cliente)}</span>
-        </div>
+// =============================================================================
+// CARREGAMENTO
+// =============================================================================
 
-        <div class="obra-info-item">
-          <span class="obra-info-label">Endereço</span>
-          <span class="obra-info-valor">${escapeHtml(obra.endereco)}</span>
-        </div>
+async function carregarObra() {
+  try {
+    // Cache
+    const cacheKeyObra = `obra_${Estado.obraId}`;
+    const cached = cacheGet(cacheKeyObra);
+    if (cached) {
+      Estado.obra = cached;
+      renderizarObra();
+      carregarServicos(); // em paralelo, sem await
+      return;
+    }
 
-        <div class="obra-info-item">
-          <span class="obra-info-label">Início</span>
-          <span class="obra-info-valor">${formatarDataCurta(obra.data_inicio)}</span>
-        </div>
+    // Supabase
+    const { data, error } = await supabase
+      .from('obras')
+      .select('*')
+      .eq('id', Estado.obraId)
+      .single();
 
-        <div class="obra-info-item">
-          <span class="obra-info-label">Previsão de Conclusão</span>
-          <span class="obra-info-valor">${formatarDataCurta(obra.data_previsao_fim)}</span>
-        </div>
-      </div>
+    if (error) {
+      console.error('[DEKA][Obra] Erro ao carregar obra:', error);
+      showToast('Erro ao carregar obra: ' + error.message, 'error');
+      _mostrarErro('Não foi possível carregar a obra.');
+      return;
+    }
 
-      <div class="obra-progresso-container">
-        <div class="obra-progresso-header">
-          <span class="obra-progresso-label">Avanço Geral da Obra</span>
-          <span class="obra-progresso-percentual">${Math.round(obra.percentual_global || 0)}%</span>
-        </div>
-        <div class="obra-progresso-barra">
-          <div class="obra-progresso-fill" style="width: ${obra.percentual_global || 0}%;"></div>
-        </div>
-      </div>
+    if (!data) {
+      _mostrarErro('Obra não encontrada.');
+      return;
+    }
+
+    Estado.obra = data;
+    cacheSet(cacheKeyObra, data, 5);
+    renderizarObra();
+    carregarServicos();
+
+  } catch (erro) {
+    console.error('[DEKA][Obra] Exceção ao carregar obra:', erro);
+    showToast(erro.message || 'Erro inesperado.', 'error');
+    _mostrarErro('Erro de conexão.');
+  }
+}
+
+async function carregarServicos() {
+  if (!Estado.obraId) return;
+
+  try {
+    const cacheKey = `servicos_${Estado.obraId}`;
+    const cached = cacheGet(cacheKey);
+    if (cached) {
+      Estado.servicos = cached;
+      renderizarServicos();
+      renderizarGantt();
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('obra_servicos')
+      .select(CAMPOS_OBRA_SERVICOS)
+      .eq('obra_id', Estado.obraId)
+      .order('codigo');
+
+    if (error) {
+      console.error('[DEKA][Obra] Erro ao carregar serviços:', error);
+      showToast('Erro ao carregar serviços.', 'error');
+      return;
+    }
+
+    Estado.servicos = data || [];
+    cacheSet(cacheKey, Estado.servicos, 5);
+    renderizarServicos();
+    renderizarGantt();
+
+  } catch (erro) {
+    console.error('[DEKA][Obra] Exceção ao carregar serviços:', erro);
+    showToast(erro.message || 'Erro ao carregar serviços.', 'error');
+  }
+}
+
+// =============================================================================
+// RENDERIZAÇÃO — HERO E KPIs
+// =============================================================================
+
+function renderizarObra() {
+  const o = Estado.obra;
+  if (!o) return;
+
+  // Oculta loading, mostra conteúdo
+  document.getElementById('estado-loading').style.display = 'none';
+  document.getElementById('obra-hero').style.display = '';
+  document.getElementById('tabs-bar').style.display = '';
+  document.querySelectorAll('.tab-content').forEach((t) => {
+    if (t.id === 'tab-visao-geral') t.style.display = 'block';
+  });
+
+  // Breadcrumb
+  document.getElementById('breadcrumb-nome').textContent = o.nome || 'Obra';
+
+  // Capa
+  if (o.capa_url) {
+    document.getElementById('obra-capa').style.backgroundImage = `url('${o.capa_url}')`;
+    document.getElementById('obra-capa-placeholder').style.display = 'none';
+  }
+
+  // Badges
+  const hoje     = new Date();
+  const previsao = o.data_previsao_fim ? new Date(o.data_previsao_fim) : null;
+  const atrasada = o.status === 'ativa' && previsao && previsao < hoje;
+  const badges   = [];
+  if (atrasada) {
+    badges.push(`<span class="badge" style="background:rgba(220,38,38,0.15);color:#DC2626;border:1px solid rgba(220,38,38,0.3)">ATRASADA</span>`);
+  } else {
+    badges.push(`<span class="badge badge-${o.status || 'ativa'}">${(o.status || 'ativa').toUpperCase()}</span>`);
+  }
+  if (o.semana) {
+    badges.push(`<span class="badge badge-semana">SEMANA ${o.semana}</span>`);
+  }
+  if (o.tipo_obra) {
+    badges.push(`<span class="badge" style="background:rgba(200,168,75,0.1);color:var(--ouro-dim);border:1px solid rgba(200,168,75,0.2)">${_esc(o.tipo_obra)}</span>`);
+  }
+  document.getElementById('obra-badges').innerHTML = badges.join('');
+
+  // Dados principais
+  document.getElementById('obra-nome').textContent    = o.nome || '—';
+  document.getElementById('obra-cliente').textContent = o.cliente || '';
+  document.getElementById('obra-endereco').textContent = o.endereco || '';
+
+  // Progresso
+  const pct = Math.min(100, Math.max(0, o.percentual_global || 0));
+  document.getElementById('obra-pct').textContent       = `${pct}%`;
+  document.getElementById('obra-pct-fill').style.width  = `${pct}%`;
+
+  // KPIs
+  _renderizarKPIs(o);
+
+  // Resumo financeiro
+  _renderizarResumoFin(o);
+
+  // Preenche formulário
+  _preencherFormulario(o);
+}
+
+function _renderizarKPIs(o) {
+  const concluidos  = Estado.servicos.filter((s) => s.status === 'CONCLUÍDO').length;
+  const emAndamento = Estado.servicos.filter((s) => s.status === 'EM ANDAMENTO').length;
+  const previsao    = o.data_previsao_fim
+    ? new Date(o.data_previsao_fim).toLocaleDateString('pt-BR')
+    : '—';
+
+  document.getElementById('kpis-grid').innerHTML = `
+    <div class="kpi-card">
+      <div class="kpi-label">Avanço Geral</div>
+      <div class="kpi-valor ouro">${o.percentual_global || 0}%</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Concluídos</div>
+      <div class="kpi-valor verde">${concluidos}</div>
+      <div class="kpi-sub">serviços</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Em Andamento</div>
+      <div class="kpi-valor">${emAndamento}</div>
+      <div class="kpi-sub">serviços</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Entrega Prevista</div>
+      <div class="kpi-valor" style="font-size:18px">${previsao}</div>
     </div>
   `;
 }
 
-/**
- * Renderiza a lista de serviços da obra.
- *
- * @param {Array} servicos Dados da tabela obra_servicos
- */
-function renderizarServicos(servicos) {
-  const container = document.getElementById('obra-servicos');
-  if (!container) {
-    console.error('[DEKA][Obra] Container #obra-servicos não encontrado no HTML.');
+function _renderizarResumoFin(o) {
+  const el = document.getElementById('resumo-fin');
+  if (!o.valor_contrato && !o.num_medicoes && !o.forma_pagamento) return;
+
+  el.style.display = '';
+  document.getElementById('resumo-fin-grid').innerHTML = `
+    <div>
+      <div class="resumo-item-label">Valor do Contrato</div>
+      <div class="resumo-item-valor ouro">${o.valor_contrato ? formatarMoedaBR(o.valor_contrato) : '—'}</div>
+    </div>
+    <div>
+      <div class="resumo-item-label">Medições Previstas</div>
+      <div class="resumo-item-valor">${o.num_medicoes || '—'}</div>
+    </div>
+    <div>
+      <div class="resumo-item-label">Periodicidade</div>
+      <div class="resumo-item-valor">${o.periodicidade || '—'}</div>
+    </div>
+    <div>
+      <div class="resumo-item-label">Forma de Pagamento</div>
+      <div class="resumo-item-valor">${o.forma_pagamento || '—'}</div>
+    </div>
+    <div>
+      <div class="resumo-item-label">Responsável Técnico</div>
+      <div class="resumo-item-valor">${o.responsavel_tecnico || '—'}</div>
+    </div>
+    <div>
+      <div class="resumo-item-label">Gestor</div>
+      <div class="resumo-item-valor">${o.nome_gestor || '—'}</div>
+    </div>
+  `;
+}
+
+// =============================================================================
+// RENDERIZAÇÃO — SERVIÇOS
+// =============================================================================
+
+function renderizarServicos() {
+  const tbody = document.getElementById('tbody-servicos');
+
+  if (Estado.servicos.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--texto-2)">Nenhum serviço cadastrado.</td></tr>`;
     return;
   }
+
+  tbody.innerHTML = Estado.servicos.map((s) => {
+    const pct        = s.percentual_concluido || 0;
+    const statusNorm = _normalizarStatus(s.status);
+    const dataInicio = s.data_inicio ? new Date(s.data_inicio + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+    const dataFim    = s.data_fim    ? new Date(s.data_fim    + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+
+    return `<tr>
+      <td class="tabela-codigo">${_esc(s.codigo || '—')}</td>
+      <td>${_esc(s.descricao_cliente || s.codigo || '—')}</td>
+      <td><span class="badge-status ${statusNorm.classe}">${statusNorm.label}</span></td>
+      <td>
+        <div class="prog-wrap">
+          <div class="prog-barra"><div class="prog-fill" style="width:${pct}%"></div></div>
+          <span class="prog-pct">${pct}%</span>
+        </div>
+      </td>
+      <td style="font-size:12px;color:var(--texto-2)">${dataInicio}</td>
+      <td style="font-size:12px;color:var(--texto-2)">${dataFim}</td>
+    </tr>`;
+  }).join('');
+}
+
+// =============================================================================
+// RENDERIZAÇÃO — GANTT
+// =============================================================================
+
+function renderizarGantt() {
+  const container = document.getElementById('gantt-container');
+  const servicos  = Estado.servicos.filter(
+    (s) => s.dias_marcados && s.dias_marcados.length > 0
+  );
 
   if (servicos.length === 0) {
-    container.innerHTML = `
-      <div class="obra-secao-vazia">
-        <span class="obra-secao-vazia-icone">📋</span>
-        <p>Nenhum serviço cadastrado para esta obra.</p>
-      </div>
-    `;
+    container.innerHTML = `<div style="text-align:center;padding:30px;color:var(--texto-2)">Nenhum serviço com datas marcadas.</div>`;
     return;
   }
 
-  const servicosHtml = servicos.map((srv) => {
-    const percentual = Math.round(srv.percentual_concluido || 0);
-    const valor = formatarMoedaBR(srv.valor_contratado || 0);
+  // Calcula range: próximas 2 semanas a partir de hoje
+  const hoje    = new Date();
+  const inicio  = new Date(hoje);
+  const fim     = new Date(hoje);
+  fim.setDate(fim.getDate() + 13);
 
-    return `
-      <div class="obra-servico-card" title="Código interno: ${escapeHtml(srv.codigo)} | Equipe: ${escapeHtml(srv.equipe_codigo)}">
-        <div class="obra-servico-header">
-          <h3 class="obra-servico-titulo">${escapeHtml(srv.descricao_cliente)}</h3>
-          <span class="obra-servico-valor">${valor}</span>
-        </div>
+  const hojeStr = hoje.toISOString().split('T')[0];
+  const dsem    = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
-        <div class="obra-servico-progresso-container">
-          <div class="obra-servico-progresso-header">
-            <span class="obra-servico-progresso-label">Progresso</span>
-            <span class="obra-servico-progresso-percentual">${percentual}%</span>
-          </div>
-          <div class="obra-servico-progresso-barra">
-            <div class="obra-servico-progresso-fill" style="width: ${percentual}%;"></div>
-          </div>
-        </div>
+  // Gera array de datas
+  const datas = [];
+  const cur = new Date(inicio);
+  while (cur <= fim) {
+    datas.push(cur.toISOString().split('T')[0]);
+    cur.setDate(cur.getDate() + 1);
+  }
 
-        <p class="obra-servico-descricao-interna">${truncar(srv.descricao_interna, 150)}</p>
-      </div>
-    `;
+  // Header
+  const thDatas = datas.map((dt) => {
+    const d2    = new Date(dt + 'T12:00:00');
+    const isHoje = dt === hojeStr;
+    return `<th class="col-dia${isHoje ? ' col-hoje' : ''}" style="min-width:28px">
+      ${d2.getDate()}/${String(d2.getMonth() + 1).padStart(2, '0')}<br>${dsem[d2.getDay()]}
+    </th>`;
+  }).join('');
+
+  // Linhas
+  const linhas = servicos.map((srv) => {
+    const diasSet = new Set(srv.dias_marcados || []);
+    const cels = datas.map((dt) => {
+      const temDia  = diasSet.has(dt);
+      const tipo    = dt === hojeStr && temDia ? 'hoje' :
+                      temDia && srv.status === 'CONCLUÍDO' ? 'concluido' :
+                      temDia ? 'ativo' : 'vazio';
+      return `<td><div class="gantt-cel ${tipo}"></div></td>`;
+    }).join('');
+
+    const statusNorm = _normalizarStatus(srv.status);
+    return `<tr>
+      <td class="col-srv">
+        <span style="font-size:11px">${_esc(srv.descricao_cliente || srv.codigo || '—')}</span>
+        <br><span style="font-size:10px;color:var(--texto-2)">${_esc(srv.codigo || '')}</span>
+      </td>
+      ${cels}
+    </tr>`;
   }).join('');
 
   container.innerHTML = `
-    <h2 class="obra-secao-titulo">Serviços</h2>
-    <div class="obra-servicos-grid">${servicosHtml}</div>
+    <table class="gantt-table">
+      <thead><tr><th class="col-srv">Serviço</th>${thDatas}</tr></thead>
+      <tbody>${linhas}</tbody>
+    </table>
+    <div style="display:flex;gap:16px;margin-top:12px;font-size:11px;color:var(--texto-2)">
+      <span><span style="display:inline-block;width:12px;height:12px;background:#22C55E;border-radius:2px;vertical-align:middle;margin-right:4px"></span>Ativo</span>
+      <span><span style="display:inline-block;width:12px;height:12px;background:#16A34A;border-radius:2px;vertical-align:middle;margin-right:4px"></span>Concluído</span>
+      <span><span style="display:inline-block;width:12px;height:12px;background:var(--ouro);border-radius:2px;vertical-align:middle;margin-right:4px"></span>Hoje</span>
+    </div>
   `;
-}
-
-/**
- * Renderiza as pendências ativas da obra.
- *
- * @param {Array} pendencias Dados da tabela obra_pendencias
- */
-function renderizarPendencias(pendencias) {
-  const container = document.getElementById('obra-pendencias');
-  if (!container) {
-    console.error('[DEKA][Obra] Container #obra-pendencias não encontrado no HTML.');
-    return;
-  }
-
-  if (pendencias.length === 0) {
-    container.innerHTML = `
-      <h2 class="obra-secao-titulo">Pendências</h2>
-      <div class="obra-secao-vazia">
-        <span class="obra-secao-vazia-icone">✅</span>
-        <p>Nenhuma pendência ativa. Tudo sob controle!</p>
-      </div>
-    `;
-    return;
-  }
-
-  const pendenciasHtml = pendencias.map((pend) => {
-    const config = PRIORIDADE_CONFIG[pend.prioridade] || PRIORIDADE_CONFIG.media;
-    const dataFormatada = formatarDataCurta(pend.created_at);
-
-    return `
-      <div class="obra-pendencia-card" style="border-left: 4px solid ${config.cor};">
-        <div class="obra-pendencia-header">
-          <span class="obra-pendencia-prioridade" style="color: ${config.cor};">
-            ${config.icone} ${config.label}
-          </span>
-          <span class="obra-pendencia-data">${dataFormatada}</span>
-        </div>
-
-        <p class="obra-pendencia-descricao">${escapeHtml(pend.descricao)}</p>
-
-        <div class="obra-pendencia-footer">
-          <span class="obra-pendencia-responsavel">📌 ${escapeHtml(pend.responsavel)}</span>
-          <span class="obra-pendencia-status">${traduzirStatus(pend.status)}</span>
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  container.innerHTML = `
-    <h2 class="obra-secao-titulo">Pendências Ativas</h2>
-    <div class="obra-pendencias-lista">${pendenciasHtml}</div>
-  `;
-}
-
-/**
- * Renderiza a timeline de visitas recentes.
- *
- * @param {Array} visitas Dados da tabela obra_visitas
- */
-function renderizarVisitas(visitas) {
-  const container = document.getElementById('obra-visitas');
-  if (!container) {
-    console.error('[DEKA][Obra] Container #obra-visitas não encontrado no HTML.');
-    return;
-  }
-
-  if (visitas.length === 0) {
-    container.innerHTML = `
-      <h2 class="obra-secao-titulo">Visitas Recentes</h2>
-      <div class="obra-secao-vazia">
-        <span class="obra-secao-vazia-icone">🗓️</span>
-        <p>Nenhuma visita registrada ainda.</p>
-      </div>
-    `;
-    return;
-  }
-
-  const visitasHtml = visitas.map((visita, index) => {
-    const dataFormatada = formatarDataCurta(visita.data_visita);
-    const statusIcon = visita.status_sync === 'aplicado' ? '✅' :
-                       visita.status_sync === 'erro' ? '⚠️' : '⏳';
-
-    return `
-      <div class="obra-visita-item">
-        <div class="obra-visita-linha ${index === visitas.length - 1 ? 'ultima' : ''}">
-          <div class="obra-visita-ponto"></div>
-        </div>
-
-        <div class="obra-visita-card">
-          <div class="obra-visita-header">
-            <span class="obra-visita-data">${dataFormatada}</span>
-            <span class="obra-visita-status" title="Sync: ${visita.status_sync}">
-              ${statusIcon}
-            </span>
-          </div>
-
-          <p class="obra-visita-resumo">${escapeHtml(visita.resumo_ia || 'Processando resumo...')}</p>
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  container.innerHTML = `
-    <h2 class="obra-secao-titulo">Últimas Visitas</h2>
-    <div class="obra-visitas-timeline">${visitasHtml}</div>
-  `;
-}
-
-/**
- * Coordena renderização de todos os blocos.
- *
- * @param {Object} dados { obra, servicos, pendencias, visitas }
- */
-function renderizarDados(dados) {
-  renderizarCabecalho(dados.obra);
-  renderizarServicos(dados.servicos);
-  renderizarPendencias(dados.pendencias);
-  renderizarVisitas(dados.visitas);
 }
 
 // =============================================================================
-// SEÇÃO 6 — UTILITÁRIOS
+// FORMULÁRIO — PREENCHIMENTO E SALVAMENTO
 // =============================================================================
 
-/**
- * Escapa HTML para prevenir XSS.
- *
- * @param {string} str String não confiável
- * @returns {string} String escapada
- */
-function escapeHtml(str) {
-  if (!str) return '';
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
+function _preencherFormulario(o) {
+  if (!o) return;
 
-/**
- * Formata uma data para exibição curta (apenas DD/MM/AAAA).
- *
- * @param {string|Date} data Data no formato ISO ou objeto Date
- * @returns {string} Data formatada (ex: "26/03/2025")
- */
-function formatarDataCurta(data) {
-  if (!data) return '—';
-  try {
-    const d = data instanceof Date ? data : new Date(data);
-    if (isNaN(d.getTime())) return '—';
-    return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  } catch {
-    return '—';
-  }
-}
-
-/**
- * Traduz status de pendência para exibição.
- *
- * @param {string} status Status da pendência
- * @returns {string} Label traduzida
- */
-function traduzirStatus(status) {
-  const labels = {
-    aberta:        'Aberta',
-    em_andamento:  'Em Andamento',
-    resolvida:     'Resolvida',
+  // Mapeia campo → id do input
+  const mapa = {
+    nome: 'f-nome', tipo_obra: 'f-tipo', status: 'f-status',
+    endereco: 'f-endereco', data_inicio: 'f-data-inicio',
+    data_previsao_fim: 'f-data-fim', semana: 'f-semana',
+    escopo_resumo: 'f-escopo', capa_url: 'f-capa-url',
+    cliente: 'f-cliente', razao_cliente: 'f-razao',
+    cnpj_cliente: 'f-cnpj', email_cliente: 'f-email',
+    telefone_cliente: 'f-telefone',
+    valor_contrato: 'f-contrato', taxa_admin: 'f-taxa',
+    num_medicoes: 'f-medicoes', periodicidade: 'f-periodicidade',
+    forma_pagamento: 'f-pagamento',
+    responsavel_tecnico: 'f-resp-tec', nome_gestor: 'f-gestor',
+    link_drive: 'f-link-drive', link_proposta: 'f-link-proposta',
+    link_contrato: 'f-link-contrato', link_fotos: 'f-link-fotos',
+    link_relatorios: 'f-link-relatorios', link_medicoes: 'f-link-medicoes',
+    link_orcamento: 'f-link-orcamento', link_portal: 'f-link-portal',
+    empresa: 'f-empresa', cnpj_empresa: 'f-cnpj-empresa',
+    tel_empresa: 'f-tel-empresa', email_empresa: 'f-email-empresa',
+    pix_empresa: 'f-pix-empresa',
   };
-  return labels[status] || status;
-}
 
-// =============================================================================
-// SEÇÃO 7 — INICIALIZAÇÃO (ÚNICO DOMContentLoaded)
-// =============================================================================
-
-/**
- * Ponto de entrada único do módulo.
- * Executado quando o DOM está pronto.
- */
-async function init() {
-  console.log('[DEKA][Obra] Inicializando módulo de detalhe de obra...');
-
-  // Passo 1: valida ID na URL
-  const obraId = extrairObraId();
-
-  if (!obraId) {
-    const idRecebido = new URLSearchParams(window.location.search).get('id');
-    console.warn('[DEKA][Obra] ID inválido ou ausente. Bloqueando acesso e redirecionando. ID recebido:', idRecebido);
-    console.error('[DEKA][Obra] ID de obra ausente ou inválido na URL.');
-    showToast(
-      'URL inválida: nenhuma obra especificada. Redirecionando para o hub...',
-      'error',
-      { persistir: true }
-    );
-    setTimeout(() => { window.location.href = '/hub.html'; }, 3000);
-    return;
+  for (const [campo, inputId] of Object.entries(mapa)) {
+    const el = document.getElementById(inputId);
+    if (!el) continue;
+    const val = o[campo];
+    if (val !== null && val !== undefined) {
+      el.value = val;
+    }
   }
 
-  console.log(`[DEKA][Obra] Carregando obra ${obraId}...`);
+  // Configura botão "Ir para configurações"
+  document.getElementById('btn-ir-config').addEventListener('click', () => {
+    _ativarTab('configuracoes');
+  });
+}
 
-  // Passo 2: carrega dados (com tratamento de erro interno)
+function _configurarFormulario() {
+  const form = document.getElementById('form-obra');
+  if (!form) return;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await salvarObra();
+  });
+}
+
+async function salvarObra() {
+  const btn = document.getElementById('btn-salvar');
+  btn.disabled = true;
+  btn.textContent = '⏳ Salvando...';
+
   try {
-    const dados = await carregarObraCompleta(obraId);
+    const dados = _coletarDadosFormulario();
 
-    // Passo 3: renderiza dados na tela
-    renderizarDados(dados);
+    let resultado;
 
-    console.log('[DEKA][Obra] ✅ Obra carregada com sucesso.');
-    showToast('Obra carregada com sucesso.', 'success');
+    if (Estado.modoNovo) {
+      // INSERT
+      resultado = await supabase.from('obras').insert([dados]).select().single();
+    } else {
+      // UPDATE
+      resultado = await supabase
+        .from('obras')
+        .update(dados)
+        .eq('id', Estado.obraId)
+        .select()
+        .single();
+    }
+
+    const { data, error } = resultado;
+
+    if (error) {
+      console.error('[DEKA][Obra] Erro ao salvar obra:', error);
+      showToast('Erro ao salvar: ' + error.message, 'error');
+      return;
+    }
+
+    // Invalida cache
+    cacheSet(`obra_${data.id}`, null, 0);
+
+    showToast(Estado.modoNovo ? 'Obra criada com sucesso!' : 'Obra salva com sucesso!', 'success');
+    console.log('[DEKA][Obra] ✅ Obra salva:', data.id);
+
+    if (Estado.modoNovo) {
+      // Redireciona para a obra criada
+      setTimeout(() => {
+        window.location.href = `obra.html?id=${data.id}`;
+      }, 1000);
+    } else {
+      Estado.obra = data;
+      renderizarObra();
+    }
 
   } catch (erro) {
-    // Este catch só é acionado se obra base falhar (carregarObraCompleta já redireciona)
-    // Mantido como fallback adicional
-    console.error('[DEKA][Obra] Erro crítico na inicialização:', erro);
+    console.error('[DEKA][Obra] Exceção ao salvar obra:', erro);
+    showToast(erro.message || 'Erro inesperado ao salvar.', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '💾 Salvar Obra';
   }
 }
 
-// Registra ponto de entrada único
-document.addEventListener('DOMContentLoaded', init, { once: true });
+function _coletarDadosFormulario() {
+  const form   = document.getElementById('form-obra');
+  const inputs = form.querySelectorAll('[name]');
+  const dados  = {};
+
+  inputs.forEach((input) => {
+    const nome = input.name;
+    let val    = input.value.trim();
+
+    // Converte campos numéricos
+    if (['valor_contrato', 'taxa_admin', 'num_medicoes', 'semana'].includes(nome)) {
+      val = val === '' ? null : Number(val);
+    } else {
+      val = val === '' ? null : val;
+    }
+
+    dados[nome] = val;
+  });
+
+  return dados;
+}
 
 // =============================================================================
-// FIM DO ARQUIVO — obra.js
-//
-// Smoke Test:
-//
-//   [x] Arquivo < 1.500 linhas?                             ✅ (< 600)
-//   [x] Apenas 1 DOMContentLoaded?                          ✅ (com { once: true })
-//   [x] Todo catch tem console.error + showToast?           ✅
-//   [x] Códigos internos (SRV-*, EQ-*) só em tooltip?       ✅
-//   [x] Promise.allSettled para modo degradado?             ✅
-//   [x] Redirecionamento se obra não existir?               ✅ (3s timeout)
-//   [x] Supabase como única fonte (zero localStorage)?      ✅
-//   [x] Validação UUID v4 na URL?                           ✅
-//   [x] escapeHtml em todas as strings de usuário?          ✅
-//   [x] Arquivo entregue COMPLETO (não patch)?              ✅
+// MODO NOVO
+// =============================================================================
+
+function _mostrarModoNovo() {
+  document.getElementById('estado-loading').style.display = 'none';
+  document.getElementById('obra-hero').style.display = 'none';
+  document.getElementById('tabs-bar').style.display = '';
+
+  // Mostra só a tab de configurações
+  document.querySelectorAll('.tab-btn').forEach((btn) => {
+    if (btn.dataset.tab !== 'configuracoes') btn.style.display = 'none';
+  });
+
+  document.getElementById('tab-configuracoes').classList.add('ativo');
+  document.getElementById('tab-configuracoes').style.display = 'block';
+  document.getElementById('breadcrumb-nome').textContent = 'Nova Obra';
+
+  _configurarFormulario();
+}
+
+// =============================================================================
+// TABS
+// =============================================================================
+
+function _configurarTabs() {
+  document.querySelectorAll('.tab-btn').forEach((btn) => {
+    btn.addEventListener('click', () => _ativarTab(btn.dataset.tab));
+  });
+
+  document.getElementById('tab-configuracoes')
+    .addEventListener('transitionend', _configurarFormulario, { once: true });
+
+  // Configura formulário ao clicar na tab de configurações
+  document.querySelector('[data-tab="configuracoes"]')
+    .addEventListener('click', _configurarFormulario, { once: true });
+}
+
+function _ativarTab(tabId) {
+  document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('ativo'));
+  document.querySelectorAll('.tab-content').forEach((c) => {
+    c.classList.remove('ativo');
+    c.style.display = 'none';
+  });
+
+  const btn = document.querySelector(`[data-tab="${tabId}"]`);
+  const tab = document.getElementById(`tab-${tabId}`);
+
+  if (btn) btn.classList.add('ativo');
+  if (tab) {
+    tab.classList.add('ativo');
+    tab.style.display = 'block';
+  }
+
+  Estado.tabAtiva = tabId;
+}
+
+// =============================================================================
+// UTILITÁRIOS
+// =============================================================================
+
+function _normalizarStatus(status) {
+  const s = (status || '').toUpperCase();
+  if (s.includes('CONCLU'))   return { classe: 's-concluido', label: 'CONCLUÍDO' };
+  if (s.includes('ANDAMENTO')) return { classe: 's-andamento', label: 'EM ANDAMENTO' };
+  if (s.includes('ATRASA'))    return { classe: 's-atrasado',  label: 'ATRASADO' };
+  return { classe: 's-executar', label: 'A EXECUTAR' };
+}
+
+function _esc(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function _mostrarErro(mensagem) {
+  document.getElementById('estado-loading').style.display = 'none';
+  document.getElementById('estado-erro').style.display    = '';
+  document.getElementById('erro-mensagem').textContent    = mensagem;
+}
+
+// =============================================================================
+// FIM DO ARQUIVO
 // =============================================================================
