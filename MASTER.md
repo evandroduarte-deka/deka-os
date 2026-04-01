@@ -2,10 +2,10 @@
 ## A Constituição do Sistema Nervoso da Berti Construtora
 
 ```
-Versão:    3.0.0 — Extraordinário
-Data:      31 de março de 2026
+Versão:    4.0.0 — Unificado
+Data:      01 de abril de 2026
 Autor:     Evandro Luiz Duarte
-Status:    VIGENTE — documento vinculante
+Status:    VIGENTE — substitui todas as versões anteriores
 Empresa:   Berti Construtora LTDA
 CNPJ:      59.622.624/0001-93
 ```
@@ -22,27 +22,15 @@ CNPJ:      59.622.624/0001-93
 
 ```
 31 de março de 2026 — Maturidade arquitetural
-Após 4 semanas de construção contínua, o DEKA OS atingiu
-seu ponto de maturidade arquitetural. Este é o dia em que
-o projeto passou de ferramenta para sistema nervoso da operação.
+Após 4 semanas de construção contínua, o DEKA OS atingiu seu ponto
+de maturidade arquitetural. O projeto passou de ferramenta para
+sistema nervoso da operação.
+
+01 de abril de 2026 — Unificação documental (v4.0)
+MASTER.md v3.0 + decisões do dia 01/04 + síntese do NotebookLM
+consolidados em documento único. Conflitos entre versões resolvidos.
+Decisões travadas com consenso explícito do gestor.
 ```
-
-### O que foi construído
-
-- Cockpit HTML com sync Supabase operacional
-- Agente financeiro com categorização automática
-- 12+ tabelas Supabase com obra_id como entidade central
-- Pipeline de IA: Claude → Worker → Supabase
-- Módulos separados: hub, obra, cockpit, relatorios, brain, comercial
-- Definição dos 4 níveis de autonomia e roadmap para operação autônoma
-- Agente comercial, orçamento e fluxo completo de vida do cliente arquitetados
-
-### O que muda a partir de hoje
-
-- O DEKA OS não é mais um projeto pessoal — é a infraestrutura da empresa
-- Toda decisão de desenvolvimento passa pelo protocolo deste documento
-- O Brain assume progressivamente funções operacionais
-- A meta é o Nível 4 de autonomia: você como dono, o Brain como gestor
 
 ---
 
@@ -52,19 +40,17 @@ O DEKA OS é o sistema operacional da Berti Construtora — não um software
 de gestão, mas a inteligência que conecta cada lead, cada obra, cada real
 e cada decisão em um único organismo que aprende e evolui.
 
-### O que nos diferencia de qualquer SaaS
-
 | Dimensão | SaaS genérico | DEKA OS |
 |---|---|---|
 | **Dados** | Acumula dados | Acumula inteligência |
-| **Aprendizado** | Zero — reinicia sempre | Cresce com cada obra |
+| **Aprendizado** | Zero | Cresce com cada obra |
 | **Integração** | Módulos isolados | `obra_id` conecta tudo |
 | **IA** | Nenhuma | Brain como gestor operacional |
 | **Financeiro** | Por projeto, sem DRE | Por obra + empresa + DRE automático |
-| **Memória** | Sem histórico inteligente | Obsidian vault — memória longa |
+| **Memória** | Sem histórico | Obsidian vault — memória longa |
 | **Comercial** | Manual | Agente qualifica, acompanha e converte |
 | **Orçamento** | Manual | Agente com base_servicos + SINAPI |
-| **Proposta** | Template manual | Gerada automaticamente em HTML Berti |
+| **Proposta** | Template manual | HTML Berti gerado automaticamente |
 | **Custo** | Mensalidade crescente | Infraestrutura própria, custo fixo |
 
 ---
@@ -73,74 +59,256 @@ e cada decisão em um único organismo que aprende e evolui.
 
 | Camada | Tecnologia | Função |
 |---|---|---|
-| **Frontend** | HTML + CSS + JS (modular) | Hub, Obra, Cockpit, Brain, Comercial, Relatórios |
-| **Backend** | Supabase (PostgreSQL) | Fonte única de verdade — todas as tabelas |
-| **IA Central** | Claude Sonnet 4.6 | Brain — orquestrador e tomador de decisão |
+| **Frontend** | HTML + CSS + JS puro (modular) | Sem frameworks — funciona em 3G |
+| **Backend** | Supabase (PostgreSQL) | Fonte única de verdade |
+| **IA Central** | Claude Sonnet 4.6 | Brain — orquestrador |
 | **IA Dev** | Claude Code | Desenvolvimento e deploy |
 | **Proxy API** | Cloudflare Worker | `anthropic-proxy.berti-b52.workers.dev` |
 | **Hospedagem** | GitHub Pages | `evandroduarte-deka/deka-os` |
-| **Automação** | N8N | Webhooks, cron jobs, orquestração |
-| **Memória Longa** | Obsidian vault | Conhecimento persistente entre obras |
-| **Entrada Mobile** | Telegram MCP | Campo → Brain sem intermediário |
-| **Transcrição** | Whisper / TurboScribe | Áudio de campo → texto estruturado |
-| **Fotos** | ImgBB API | Zero base64 em localStorage |
-| **Análise visual** | Gemini Vision | Análise de plantas e projetos PDF |
-| **Pesquisa real-time** | Perplexity API | Preços de mercado, normas, legislação |
-| **Base de serviços** | base_servicos (Supabase) | 162 serviços · 28 categorias |
-| **Preços oficiais** | SINAPI API | Base secundária de custos |
-| **Índices** | IBGE / INCC | Reajuste automático de contratos |
-| **Voz (stand by)** | ElevenLabs | Alertas por áudio — implementação futura |
+| **Automação** | N8N | Webhooks, cron jobs |
+| **Memória Longa** | Obsidian vault | Conhecimento entre obras |
+| **Entrada Mobile** | Telegram MCP | Campo → Brain |
+| **Transcrição** | Whisper | Áudio → texto estruturado |
+| **Fotos** | ImgBB API | Zero base64 |
+| **Análise visual** | Gemini Vision | Plantas e projetos PDF |
+| **Pesquisa** | Perplexity API | Preços e normas em tempo real |
+| **Base serviços** | `base_servicos` (Supabase) | 162 serviços · 28 categorias |
+| **Preços oficiais** | SINAPI API | Base secundária — sempre com flag |
 
 ### Credenciais e endpoints ativos
 
 ```
 Cloudflare Worker: anthropic-proxy.berti-b52.workers.dev
 GitHub:            evandroduarte-deka/deka-os
-Supabase:          tdylutdfzgtcfyhynenk — online e operacional
+Supabase:          tdylutdfzgtcfyhynenk
 N8N:               criadorderealidades.app.n8n.cloud
 ImgBB API Key:     588ec0d66fb7cefc2ee8aea196125c53
+Token:             localStorage.getItem('mdo_worker_token') — NUNCA hardcoded
 ```
 
 ---
 
-## 4. Arquitetura Central — obra_id
+## 4. Arquitetura de Frontend — Modularidade Estrita
 
-> ⚠️ **DECISÃO IMUTÁVEL**
-> A `obra` é a entidade central do DEKA OS. Todos os módulos —
-> financeiro, tarefas, clientes, fotos, snapshots, compras, contratos —
-> referenciam o mesmo `obra_id`. Esta decisão não pode ser revertida
-> sem reescrever o sistema inteiro.
+> ⚠️ **DECISÃO CRÍTICA — aprendida na prática**
+> O Cockpit cresceu para 19.800 linhas. Debug impossível. Claude Code
+> perdia contexto. Edições simples quebravam seções não relacionadas.
+> Este foi o Anti-padrão 4. A solução definitiva está abaixo — nunca reverter.
 
-### Tabelas Supabase (inventário completo auditado em 01/04/2026)
+### 4.1 Limites rígidos de tamanho
 
-**Com dados ativos:**
-- `obras` — entidade central, 42 campos
-- `obra_servicos` — serviços e progresso, com `dias_marcados` para Gantt
-- `obra_visitas` — diário de campo
-- `brain_comercial` — leads e WhatsApp
-- `base_servicos` — 162 serviços, 28 categorias
-- `propostas` — propostas comerciais
+| Tipo de arquivo | Limite | O que fazer se ultrapassar |
+|---|---|---|
+| Módulos JS em `assets/modulos/` | **400 linhas** | Dividir em submódulos antes de continuar |
+| HTML/JS gerais | **3.000 linhas** | Extrair para `assets/modulos/` |
+| Shell `obra.html` (exceção única) | **5.000 linhas** | Contém 9 tabs — única exceção documentada |
+| `deka.js` (núcleo global) | **1.500 linhas** | Extrair utilitários para módulos |
 
-**Estrutura criada, aguardando dados:**
-- `clientes`, `contratos`, `financeiro`, `financeiro_empresa`
-- `obra_compras`, `oportunidades`, `obra_snapshots`
-- `obra_fotos`, `obra_pendencias`, `brain_data`
-- `orcamentos`, `itens_proposta`
+### 4.2 Lazy Loading — obrigatório
 
-> Para schema completo de cada tabela, consulte ARCHITECTURE.md.
-
-### Funções canônicas — nunca reescrever
+Cada tab do Mestre de Obra carrega seu módulo JS **apenas quando ativada**.
 
 ```javascript
-cacheGet() / cacheSet()   // Cache versionado — prefixo deka_cache_v2_
-fetchComTimeout()         // Todo fetch usa AbortController 15s
-chamarClaude()            // Toda IA passa pelo Worker
-showToast()               // Toda notificação ao gestor
+// ✅ PADRÃO OBRIGATÓRIO
+async function carregarModulo(nomeTab) {
+  if (modulosCarregados.has(nomeTab)) return;
+  const script = document.createElement('script');
+  script.type = 'module';
+  script.src = `./assets/modulos/mod-${nomeTab}.js`;
+  document.head.appendChild(script);
+  modulosCarregados.add(nomeTab);
+}
+
+// ❌ PROIBIDO — carregar tudo na inicialização
+import './assets/modulos/mod-visita.js';
+import './assets/modulos/mod-orcamento.js';
+```
+
+### 4.3 Ponto único de inicialização
+
+- **Um único** `DOMContentLoaded` em todo o sistema — exclusivamente em `deka.js`
+- **Um único** `init()` ou `main()` por módulo JS
+- Múltiplos listeners causam race conditions — proibido
+
+### 4.4 Nomenclatura padrão
+
+```
+assets/modulos/mod-obra.js          ← tab 1
+assets/modulos/mod-visita.js        ← tab 2
+assets/modulos/mod-orcamento.js     ← tab 3
+assets/modulos/mod-cronograma.js    ← tab 4
+assets/modulos/mod-equipes.js       ← tab 5
+assets/modulos/mod-pagamentos.js    ← tab 6
+assets/modulos/mod-registro.js      ← tab 7
+assets/modulos/mod-fechamento.js    ← tab 8
+assets/modulos/mod-assistente.js    ← tab 9
+```
+
+### 4.5 Regras do Claude Code
+
+- **1 arquivo por sessão** — sem exceção
+- Entregar arquivo **completo** — nunca patches ou trechos para colar
+- Se o arquivo alvo ultrapassar o limite → dividir antes de editar
+- Smoke test obrigatório antes de todo commit
+
+---
+
+## 5. Arquitetura Central — obra_id
+
+> ⚠️ **DECISÃO IMUTÁVEL**
+> A `obra` é a entidade central. Todos os módulos referenciam o mesmo
+> `obra_id`. Esta decisão não pode ser revertida sem reescrever o sistema.
+
+### Funções canônicas — nunca reescrever ou duplicar
+
+```javascript
+calcPctGeral()           // Progresso geral da obra — instância única
+_prepararPayloadSync()   // Toda gravação no Supabase passa por aqui
+sanitizeState()          // Toda entrada de dados passa por sanitização
+cacheGet() / cacheSet()  // Cache versionado — prefixo deka_cache_v2_
+fetchComTimeout()        // Todo fetch com AbortController 15s
+chamarClaude()           // Toda IA passa pelo Worker
+showToast()              // Toda notificação ao gestor
+```
+
+> **Regra absoluta:** Qualquer feature que grava no Supabase DEVE
+> passar por `_prepararPayloadSync()`. Sem exceção.
+
+---
+
+## 6. Estrutura do Mestre de Obra — 9 Módulos
+
+### Fluxo de navegação
+
+```
+hub.html          ← lista todas as obras
+    ↓ clica em uma obra
+obra.html         ← shell com topbar + 9 tabs (máx 5.000 linhas)
+    ↓ ativa tab
+assets/modulos/   ← módulo JS carregado sob demanda (máx 400 linhas)
+```
+
+### Topbar da obra (sempre visível)
+
+```
+← HUB  ◄ Obras  Mestre.  [Nome da Obra]  Semana N · período  47%  18:22
+```
+
+### As 9 tabs
+
+| # | Tab | Módulo | Função principal |
+|---|---|---|---|
+| 1 | **OBRA** | `mod-obra.js` | Dados gerais, cliente, KPIs, financeiro |
+| 2 | **VISITA** | `mod-visita.js` | Programação do dia, navegador semanal, áudio |
+| 3 | **ORÇAMENTO** | `mod-orcamento.js` | Tabela editável, KPIs, Sync Planilha, PDF |
+| 4 | **CRONOGRAMA** | `mod-cronograma.js` | Gantt completo, filtros, cores por equipe |
+| 5 | **EQUIPES** | `mod-equipes.js` | Grid presença, cards com PIX e contato |
+| 6 | **PAGAMENTOS** | `mod-pagamentos.js` | Entradas/saídas, filtros, Importar IA |
+| 7 | **REGISTRO** | `mod-registro.js` | Fotos, pendências, materiais, notas, histórico |
+| 8 | **FECHAMENTO** | `mod-fechamento.js` | Fechamento de obra e acerto final |
+| 9 | **ASSISTENTE** | `mod-assistente.js` | Chat IA com contexto completo da obra |
+
+### Detalhamento — tab VISITA
+
+```
+[REGISTRAR VISITA]                    Semana 4 · 51 serviços
+
+[Timer de visita]  00:00:00  ▶ INICIAR
+
+[PROGRAMAÇÃO DO DIA]                  Quarta 01/04/2026
+  Lumitech                            1 serviço
+  Infraestrutura Elétrica — Salão 2  0%
+
+[Navegador semanal]
+  ◄  Semana atual  ►  Hoje
+  SEG    TER    QUA    QUI    SEX    SÁB    DOM
+  30/03  31/03  01/04  02/04  03/04  04/04  05/04
+  •      •      •      •      •      •      •     ← ponto = visita registrada
+
+[Chips de equipes]
+  — Valdeci José E.   — Ademarcos   — Lumitech
+  — Claudinei         — Pablo       — [Marcenaria]
+  — [Limpeza]         — Roberto
+
+[Área de registro — fundo #1A3A2A]
+  [🎤 Toque para gravar]
+  [Textarea livre: O que aconteceu hoje?...]
+  [✓ Salvar dia]  [★ PROCESSAR COM IA]  [Limpar]  salvo 21:46
+```
+
+### Detalhamento — tab ORÇAMENTO
+
+```
+[ORÇAMENTO]                           Visão financeira da obra
+  R$ 0 Total · R$ 0 Executado · R$ 0 Aditivos · R$ 0 A Executar
+  [+ Novo Aditivo]  [PDF]  [↑ SYNC PLANILHA]
+
+Tabela editável — Cód · Descrição · Un · Qtde · R$/Un · Total · Exec.
+  PRELIMINARES                                          0%  R$ 0
+    SRV-002  Desmobilização de Mobiliário — Salão 1  vb  1  —  0
+    SRV-001  Isolamento de Obra                       vb  1  —  0
+    ...
+  DEMOLIÇÕES                                            0%  R$ 0
+    SRV-005  Retirada de Elementos de Parede          vb  1  —  0
+    ...
+  [+ Serviço]       [Subtotal categoria]
+```
+
+### Detalhamento — tab CRONOGRAMA
+
+```
+[◄]  09/03 a 26/04  [►]
+[Esta semana]  [Todos]  [□ Ocultar 100%]  [Todas equipes ▼]  [Buscar...]
+Expandir  Serviço ●── 268   Zoom ●──
+
+Gantt: Serviço · % · Grade de dias com cores por equipe
+
+[SALVAR CRONOGRAMA]
+```
+
+### Detalhamento — tab EQUIPES
+
+```
+[EQUIPES — PRESENÇA]                  8 equipes
+
+[Grid presença — período completo]
+  Equipe              MAR 2026                              Total
+  Valdeci José Empr.  ■■■ ■ ■■■■■■■■■■■■■■ ■■ ■■ ■ ■■    17d
+  Ademarcos AC        ■■■   ■■  ■■ ■  ■■   ■              7d
+  Lumitech            ■■■■■■■■   ■■■ ■■  ■■               7d
+  Legenda: ■ Presente  ■ Ausente  ■ Agendado  □ Não marcado
+
+[Cards por equipe]
+  EQ-OBR-01  Valdeci José Empreiteiro  Obra Civil / Demolições
+  EQ-ACO-01  Ademarcos AC              Ar-condicionado
+  EQ-ELE-01  Lumitech                  Elétrica
+  [Sem tel]  [📋 Copiar]
+```
+
+### Detalhamento — tab PAGAMENTOS
+
+```
+[PAGAMENTOS]                          Sem lançamentos
+  ENTRADAS  R$ 0    SAÍDAS  R$ 0    SALDO  +R$ 0
+  [Todos · Entrada · Saída]  [Todos · Pendente · Pago · Agendado]
+  [Todas categorias ▼]
+  [+ NOVO LANÇAMENTO]  [↑ IMPORTAR DOCUMENTO (IA)]  [💬 Mensagem Cliente]
+```
+
+### Detalhamento — tab REGISTRO
+
+```
+[Cockpit Inteligente]    Alertas · Planejamento · Compras · Comunicação
+[5  FOTOS]               3 fotos · S4 · 3 na nuvem · 49 anteriores
+[6  PENDÊNCIAS]          7 abertas (11 total)
+[7  MATERIAIS]           3 itens · 1 a comprar
+[8  NOTAS & VISITA]      21 notas
+[9  HISTÓRICO DE SEMANAS]  2 semanas · 16 visitas
 ```
 
 ---
 
-## 5. O Brain — Inteligência Operacional
+## 7. O Brain — Inteligência Operacional
 
 O Brain não é um chatbot. É o sistema nervoso central — lê todos os dados,
 raciocina e **grava de volta no Supabase**. Diferencial crítico: tem escrita.
@@ -161,53 +329,42 @@ raciocina e **grava de volta no Supabase**. Diferencial crítico: tem escrita.
 }
 ```
 
-> O Brain recebe este objeto pronto — não acessa o banco diretamente.
+### Agentes especializados
 
-### O que o Brain faz
+```
+Brain (Claude Sonnet)    ← orquestrador central
+    ├── AGT_COCKPIT      ← processa visitas e áudio de campo
+    ├── AGT_WHATSAPP     ← triagem comercial e leads
+    ├── AGT_RELATORIO    ← relatório semanal cliente (Haiku)
+    ├── AGT_FINANCEIRO   ← categorização 98,5% precisão
+    ├── AGT_ORCAMENTO    ← levantamento e proposta
+    └── AGT_ASSISTENTE   ← chat com contexto da obra
+```
 
-| Função | Output |
-|---|---|
-| Alerta proativo | Notificação Telegram + pendência automática |
-| DRE automático | Relatório todo dia 1° às 8h |
-| Relatório cliente | HTML Padrão Berti sem códigos internos |
-| Sugestão de decisão | Próximo passo baseado no contexto |
-| Fluxo de caixa | Projeção 60 dias |
-| Escrita Obsidian | Lições e benchmarks pós-obra |
-
-> ⚠️ **Regra crítica:** Relatórios para o cliente NUNCA expõem códigos
-> internos (SRV/EQ/FOR), slugs ou IDs. O Brain sempre traduz para
-> linguagem de negócio.
+> ⚠️ **Regra crítica:** Relatórios ao cliente NUNCA expõem SRV/EQ/FOR.
 
 ---
 
-## 6. Obsidian — Memória Longa
+## 8. Obsidian — Memória Longa
 
 ```
 /vault/
-  /obras/          ← gerado automaticamente ao fechar obra
+  /obras/          ← gerado ao fechar obra
   /fornecedores/   ← histórico, avaliação, pontos fortes
   /clientes/       ← histórico de relacionamento
   /benchmarks/     ← custo/m² por tipo, prazos, materiais
-  /decisoes/       ← decisões arquiteturais registradas
+  /decisoes/       ← decisões arquiteturais
   /aprendizados/   ← erros, o que funciona, técnicas validadas
 ```
 
-### Os 3 fluxos de alimentação
-
-1. **Automático:** ao fechar obra, Brain gera nota com benchmarks
-2. **Via Telegram:** campo → Brain formata → grava no vault
-3. **Leitura pelo Brain:** ao iniciar obra nova, busca notas com tags similares
-
 ---
 
-## 7. Financeiro — Obra + Empresa + DRE
-
-### Separação fundamental
+## 9. Financeiro — Obra + Empresa + DRE
 
 | Financeiro por Obra | Financeiro Empresa |
 |---|---|
-| Receitas de medição por cliente | Pró-labore e distribuição |
-| Pagamento de subcontratados | Salários fixos |
+| Receitas de medição | Pró-labore e distribuição |
+| Pagamento subcontratados | Salários fixos |
 | Material de construção | Contador, endereço fiscal |
 | Margem e resultado por obra | DRE consolidado da Berti |
 
@@ -222,55 +379,21 @@ PJ → PF         → distribuicao_prolabore
 Confiança < 90% → fila de revisão humana → vira regra permanente
 ```
 
-### Outputs autônomos
-
-1. DRE mensal automático — todo dia 1° às 8h via Telegram
-2. Projeção de 60 dias — visão de para-brisa com alertas
-3. Alerta de vencimentos — 3 dias antes
-4. Relatório financeiro por obra — para o cliente, sem códigos internos
-
-> ⚠️ **Regra estratégica:** Dívidas: sempre estratégia Bola de Neve.
-> Nunca renegociar. Sempre amortizar/quitar antecipadamente.
+> ⚠️ **Regra estratégica:** Dívidas: sempre Bola de Neve. Nunca renegociar.
 
 ---
 
-## 8. Módulo de Compras de Material
-
-### Entrada via Telegram
+## 10. Módulo de Compras de Material
 
 ```
-Você: "Comprei 10 sacos argamassa R$340 Badida, Leroy Merlin"
-  ↓
-Brain: categoriza → vincula obra_id → registra despesa
-       → atualiza resultado da obra → grava em obra_compras
+Telegram: "Comprei 10 sacos argamassa R$340 Badida, Leroy Merlin"
+    ↓
+Brain: categoriza → vincula obra_id → registra despesa → grava em obra_compras
 ```
-
-### Categorias de material
-
-| Categoria | Exemplos |
-|---|---|
-| `material_estrutural` | cimento, argamassa, bloco, ferro |
-| `material_hidraulico` | tubos, conexões, registros |
-| `material_eletrico` | fios, disjuntores, tomadas |
-| `material_acabamento` | cerâmica, tinta, massa corrida |
-| `material_esquadria` | portas, janelas, vidros |
-| `material_outros` | EPI, ferramentas consumíveis |
-| `servico_terceiro` | subempreitadas contratadas |
 
 ---
 
-## 9. Relatórios Semanais
-
-### Para o cliente — toda sexta às 17h
-
-| Seção | Fonte |
-|---|---|
-| Progresso geral | `percentual_global` |
-| O que foi feito | `obra_visitas` + `obra_servicos` |
-| Fotos da semana | `obra_fotos` (ImgBB) |
-| Próximos passos | Brain + `obra_servicos` |
-
-### Fluxo de aprovação
+## 11. Relatórios Semanais
 
 ```
 Sexta 17h → Brain gera rascunho HTML
@@ -282,18 +405,7 @@ Sexta 17h → Brain gera rascunho HTML
 
 ---
 
-## 10. Telegram MCP — Entrada de Campo
-
-```
-Você (voz/foto/texto)
-  → Telegram Bot
-  → N8N (orquestra)
-  → Whisper (transcrição)
-  → Brain (interpreta + roteia)
-  → Supabase (tabela correta) + Obsidian (se conhecimento)
-```
-
-### Comandos reconhecidos pelo Brain
+## 12. Telegram MCP — Entrada de Campo
 
 | Tipo | Exemplo | Ação |
 |---|---|---|
@@ -301,77 +413,52 @@ Você (voz/foto/texto)
 | Foto + legenda | Foto com "problema tubulação" | Vision analisa + cria pendência |
 | Comando direto | "Marca revestimento 80%" | Atualiza obra_servicos |
 | Consulta | "Quanto falta receber da Hebron?" | Responde no Telegram |
-| Input Obsidian | "Anotar: Marcos fez retrabalho" | Grava no vault |
 | Compra material | "Comprei argamassa R$340 Badida" | obra_compras + financeiro |
 
 ---
 
-## 11. Agente Comercial
+## 13. Agente Comercial
 
-### Filtragem de leads
-
-| Tipo | Ação |
+| Tipo de contato | Ação |
 |---|---|
 | Lead qualificado | Abre oportunidade, agenda visita, notifica |
 | Solicitação orçamento | Alimenta agente de orçamento |
 | Dúvida genérica | Responde com FAQ Berti |
 | Spam | Arquiva sem notificar |
 
-### Técnicas aplicadas
-
-- SPIN Selling para levantamento de necessidades
-- Ancoragem de valor antes do preço
-- Urgência real baseada em agenda e equipe disponível
-- Registro de objeções com sugestão de abordagem
-
 ---
 
-## 12. Agente de Orçamento e Proposta
+## 14. Agente de Orçamento e Proposta
 
 ### Hierarquia de referência de preços
 
 ```
 1° base_servicos (Supabase) — 162 serviços validados pela Berti
    ↓ item não encontrado
-2° SINAPI API — com flag obrigatória "SINAPI — validar BDI"
-   ↓ item específico
+2° SINAPI API — flag obrigatória "SINAPI — validar BDI"
+   ↓ item muito específico
 3° Perplexity — pesquisa de mercado em tempo real
    ↓ sempre
 Aplicação de BDI + percentual de administração Berti
 ```
 
-### Proposta em HTML Berti
+---
 
-Estrutura obrigatória:
-1. Apresentação da Berti Construtora
-2. Como trabalhamos
-3. Escopo detalhado
-4. Cronograma de execução
-5. Previsão de desembolso
-6. Investimento total
-7. Próximos passos
+## 15. Fluxo de Vida do Cliente
 
-> Gamma.app descartado. Proposta gerada em HTML com identidade Berti.
+```
+① LEAD       → Agente filtra → abre oportunidade
+② VENDA      → Orçamento → proposta HTML Berti
+③ FECHAMENTO → Coleta dados pessoais → gera contratos
+④ ONBOARDING → Cadastra cliente + obra + obra_id + orçamento
+⑤ EXECUÇÃO   → Mestre de Obra + Telegram + relatórios automáticos
+⑥ ENTREGA    → Relatório final + acerto financeiro
+⑦ PÓS-OBRA  → Brain gera nota Obsidian com benchmarks
+```
 
 ---
 
-## 13. Fluxo de Vida do Cliente
-
-```
-① LEAD → Agente filtra e qualifica → abre oportunidade
-② VENDA → Agente acompanha → orçamento → proposta HTML
-③ FECHAMENTO → coleta dados pessoais → gera contratos → assinatura
-④ ONBOARDING → cadastra cliente + obra + obra_id + orçamento vinculado
-⑤ EXECUÇÃO → Cockpit + Telegram + relatórios automáticos
-⑥ ENTREGA → relatório final + acerto financeiro
-⑦ PÓS-OBRA → Brain gera nota Obsidian com benchmarks
-```
-
-> Dados pessoais coletados APENAS ao fechamento (LGPD + fluxo lógico).
-
----
-
-## 14. Roadmap de Autonomia
+## 16. Roadmap de Autonomia
 
 | Nível | Nome | O que o sistema faz | Você faz | Prazo |
 |---|---|---|---|---|
@@ -379,53 +466,6 @@ Estrutura obrigatória:
 | **2** | Sugestão | Sugere decisões fundamentadas | Aprova ou rejeita | Q2 2026 |
 | **3** | Execução | Executa tarefas rotineiras | Aprova só o crítico | Q3 2026 |
 | **4** | Gestão | Gerencia com autonomia total | Define estratégia | META |
-
----
-
-## 15. Decisões Travadas
-
-> Estas decisões não podem ser revertidas sem consenso explícito
-> e atualização deste documento.
-
-| Decisão | O que foi decidido | Data |
-|---|---|---|
-| Entidade central | `obra_id` como chave universal | 31/03/2026 |
-| Brain com escrita | Brain grava de volta no Supabase | 31/03/2026 |
-| Financeiro vinculado | Financeiro usa obra_id | 31/03/2026 |
-| Proposta em HTML | Gamma.app descartado | 31/03/2026 |
-| Contrato como gatilho | Dados pessoais só ao fechamento | 31/03/2026 |
-| SINAPI como secundária | base_servicos é primária | 31/03/2026 |
-| Fotos via ImgBB | Zero base64 em localStorage | Anterior |
-| Token do localStorage | `mdo_worker_token` — nunca hardcoded | 01/04/2026 |
-| Módulos modulares | Máx 3.000 linhas por arquivo | Anterior |
-| Zero try/catch silencioso | Todo catch: console.error + showToast | Anterior |
-| Bola de Neve | Estratégia única para dívidas | Anterior |
-| ElevenLabs stand by | Áudio incompatível com TDAH | 31/03/2026 |
-
----
-
-## 16. Estado Atual do Desenvolvimento
-
-> Atualizado em 01/04/2026
-
-### Sessões concluídas
-
-| Sessão | Arquivo | Status |
-|---|---|---|
-| 1 | ARCHITECTURE.md | ✅ Schema real do Supabase |
-| 2 | deka.js | ✅ Token prioriza localStorage |
-| 3 | hub.html + hub.js | ✅ Reconstrução completa |
-| Doc | MASTER.md | ✅ Este documento |
-
-### Próximas sessões (roadmap)
-
-| Sessão | Arquivo | Objetivo |
-|---|---|---|
-| 4 | obra.html + obra.js | Dashboard + edição 42 campos |
-| 5 | cockpit.html + cockpit.js | Áudio + Whisper + AGT_COCKPIT |
-| 6 | relatorios.html + relatorio-pdf.html | PDF Padrão Berti real |
-| 7 | brain.html + brain.js | JARVIS + briefing semanal |
-| 8 | comercial.html + comercial.js | Leads + propostas |
 
 ---
 
@@ -438,47 +478,95 @@ Estrutura obrigatória:
 | **Resp. Técnica** | Jéssica Berti Martins — CAU A129520-9 |
 | **Gestor** | Evandro Luiz Duarte |
 | **Telefone** | (41) 9183-6651 |
-| **Endereço** | R. Mateus Leme, 1970 — Centro Cívico, Curitiba/PR |
-| **Preto principal** | `#1A1A1A` — header, texto, fundo dark |
-| **Ouro** | `#C8A84B` — acento, números KPI, separadores |
-| **Branco** | `#FFFFFF` — fundo geral |
-| **Verde status** | `#22C55E` — concluído |
-| **Azul escuro** | `#1E3A5F` — em andamento |
-| **Tipografia** | Barlow Condensed — todos os documentos |
-| **Tom** | Consultoria técnica · sem jargão interno |
+
+### Paleta oficial — travada em 01/04/2026
+
+| Token | Hex | Uso |
+|---|---|---|
+| `--verde-berti` | `#1A3A2A` | Header, topbar, tabs ativas, cabeçalho tabela |
+| `--ouro-berti` | `#9A7B3A` | Logo CONSTRUTORA, avanço %, separadores |
+| `--branco` | `#FFFFFF` | Fundo geral, KPIs, tabela |
+| `--cinza-claro` | `#F5F5F5` | Linhas alternadas, fundo tabs inativas |
+| `--cinza-borda` | `#E5E5E5` | Bordas divisórias |
+| `--verde-status` | `#22C55E` | Badge CONCLUÍDO, No Prazo |
+| `--azul-andamento` | `#1E3A5F` | Badge EM ANDAMENTO |
+| `--cinza-executar` | `#374151` | Badge A EXECUTAR |
+| `--vermelho-alerta` | `#DC2626` | Atrasado, alertas críticos |
+
+**Tipografia:** Barlow Condensed (Google Fonts) — pesos 300 a 800
 
 ---
 
-## 18. Anti-Padrões
+## 18. Decisões Travadas
 
-> Erros reais vividos — não teóricos.
-
-**❌ base64 para fotos**
-Colapsou localStorage com 3 obras simultâneas. Decisão: ImgBB sempre.
-
-**❌ try/catch silencioso**
-Bug oculto por dias — sistema aparentava funcionar enquanto falhava.
-Decisão: todo catch obrigatoriamente console.error + showToast.
-
-**❌ commit direto no main**
-Quebrou produção sem possibilidade de rollback limpo.
-Decisão: sempre PR — nunca commit direto.
-
-**❌ arquivo monolítico sem limite**
-19.800 linhas impossibilitaram debug e perderam contexto do Claude Code.
-Decisão: máximo 3.000 linhas por arquivo.
-
-**❌ token hardcoded no HTML**
-Expõe credenciais no código-fonte visível por qualquer pessoa.
-Decisão: token sempre do localStorage (`mdo_worker_token`).
+| Decisão | Valor | Data |
+|---|---|---|
+| Entidade central | `obra_id` como chave universal | Anterior |
+| Fonte única | Supabase — zero dados em localStorage sem TTL | Anterior |
+| Fotos | ImgBB API — zero base64 | Anterior |
+| Token | `localStorage.getItem('mdo_worker_token')` — nunca hardcoded | 01/04/2026 |
+| Funções canônicas | `calcPctGeral()`, `_prepararPayloadSync()`, `sanitizeState()` | Anterior |
+| Frontend | HTML + JS puro — sem frameworks | Anterior |
+| Lazy loading | Tab carrega módulo JS só quando ativada | Anterior |
+| Limite módulos JS | 400 linhas em `assets/modulos/` | Anterior |
+| Limite geral HTML/JS | 3.000 linhas | 01/04/2026 |
+| Limite shell obra.html | 5.000 linhas (única exceção) | 01/04/2026 |
+| Estrutura navegação | `hub.html` → `obra.html` shell 9 tabs | 01/04/2026 |
+| **Ouro Berti** | `#9A7B3A` | 01/04/2026 |
+| **Verde Berti** | `#1A3A2A` | 01/04/2026 |
+| Brain com escrita | Brain grava de volta no Supabase | 31/03/2026 |
+| Proposta em HTML | Gamma.app descartado | 31/03/2026 |
+| Contrato como gatilho | Dados pessoais só ao fechamento | 31/03/2026 |
+| SINAPI como secundária | base_servicos é primária | 31/03/2026 |
+| Bola de Neve | Estratégia única para dívidas | Anterior |
+| Zero try/catch silencioso | Todo catch: console.error + showToast | Anterior |
+| Zero DOMContentLoaded duplicados | Apenas em deka.js | Anterior |
+| Relatórios limpos | Nunca expor SRV/EQ/FOR ao cliente | Anterior |
+| 1 arquivo por sessão | Regra absoluta do Claude Code | Anterior |
 
 ---
 
-## 19. SLA dos Agentes
+## 19. Estado Atual do Desenvolvimento
+
+> Atualizado em 01/04/2026
+
+### Concluído
+
+| Arquivo | Status |
+|---|---|
+| `MASTER.md` v4.0 | ✅ Este documento |
+| `ARCHITECTURE.md` | ✅ Schema real Supabase auditado |
+| `CLAUDE.md` | ✅ Índice para Claude Code |
+| `deka.js` | ✅ Token do localStorage |
+| `hub.html + hub.js` | ✅ Lista de obras — Padrão Berti |
+| `obra.html + obra.js` | ⚠️ Incompleto — 4 tabs, faltam 5 + lazy loading |
+
+### Pendente — ordem de execução
+
+| # | Tarefa | Descrição |
+|---|---|---|
+| A | Refatorar `obra.html` | Shell das 9 tabs com lazy loading |
+| B | `mod-obra.js` | Dados gerais, KPIs, financeiro |
+| C | `mod-visita.js` | Programação do dia, navegador, áudio, IA |
+| D | `mod-orcamento.js` | Tabela editável, Sync Planilha |
+| E | `mod-cronograma.js` | Gantt completo |
+| F | `mod-equipes.js` | Grid presença + cards |
+| G | `mod-pagamentos.js` | Entradas/saídas + Importar IA |
+| H | `mod-registro.js` | Fotos, pendências, materiais, notas |
+| I | `mod-fechamento.js` | Fechamento de obra |
+| J | `mod-assistente.js` | Chat IA com contexto |
+| K | `cockpit.html + cockpit.js` | Hub de operação — JARVIS |
+| L | `relatorios.html + relatorio-pdf.html` | PDF Padrão Berti |
+| M | `brain.html + brain.js` | Briefing semanal + DRE |
+| N | `comercial.html + comercial.js` | Leads + propostas |
+
+---
+
+## 20. SLA dos Agentes
 
 | Operação | SLA máximo | Fallback |
 |---|---|---|
-| Entrada via Telegram | 15 segundos | Salva texto bruto, processa IA depois |
+| Entrada via Telegram | 15 segundos | Salva texto bruto, processa depois |
 | Brain — consulta simples | 45 segundos | Cache parcial |
 | Brain — obra_context completo | 45 segundos | Contexto reduzido |
 | Geração de relatório | 90 segundos | Rascunho parcial |
@@ -488,7 +576,40 @@ Decisão: token sempre do localStorage (`mdo_worker_token`).
 
 ---
 
-## 20. Glossário
+## 21. Anti-Padrões
+
+**❌ 1 — base64 para fotos**
+Colapsou localStorage com 3 obras. Decisão: ImgBB sempre. Zero base64.
+
+**❌ 2 — try/catch silencioso**
+Bug oculto por dias. Decisão: todo catch: console.error + showToast.
+
+**❌ 3 — commit direto no main**
+Quebrou produção. Decisão: sempre PR — nunca commit direto.
+
+**❌ 4 — arquivo monolítico**
+19.800 linhas — debug impossível, Claude Code perdia contexto.
+Decisão: máx 3.000 linhas geral, 400 linhas em `assets/modulos/`.
+
+**❌ 5 — token hardcoded**
+Expõe credenciais no código público.
+Decisão: token sempre do `localStorage.getItem('mdo_worker_token')`.
+
+---
+
+## 22. Mapa de Resiliência
+
+| Componente | Se falhar | Comportamento esperado |
+|---|---|---|
+| Supabase | Cache localStorage 10min · modo leitura | Sync ao reconectar |
+| Cloudflare Worker | Cockpit sem IA · formulários manuais | Retry backoff 3x |
+| N8N | Agentes param · fila acumula | Processa ao voltar |
+| ImgBB | Texto salva · foto não sobe | Retry manual |
+| Brain (Claude API) | Modo manual · sem IA | Haiku como fallback |
+
+---
+
+## 23. Glossário
 
 | Termo | Definição |
 |---|---|
@@ -499,37 +620,40 @@ Decisão: token sempre do localStorage (`mdo_worker_token`).
 | **BDI** | Benefícios e Despesas Indiretas — aplicado sobre SINAPI |
 | **Padrão Berti** | Tom: consultoria técnica, sem jargão, foco em progresso |
 | **SRV / EQ / FOR** | Códigos internos — nunca em documentos de cliente |
-| **X-Deka-Token** | Header de autenticação no Worker — vem do localStorage |
 | `mdo_worker_token` | Chave localStorage do token — única fonte autorizada |
-| `fetchComTimeout` | Todo fetch com AbortController 15s — obrigatório |
-| `cacheGet/cacheSet` | Cache versionado — prefixo `deka_cache_v2_` obrigatório |
+| `calcPctGeral()` | Função canônica de progresso — nunca duplicar |
+| `_prepararPayloadSync()` | Toda gravação no Supabase passa por aqui |
+| `sanitizeState()` | Toda entrada de dados passa por sanitização |
+| **Lazy loading** | Tab carrega módulo JS só quando ativada |
+| **Shell** | `obra.html` — container das 9 tabs sem lógica própria |
 | **Nível 4** | Meta: Brain como gestor operacional, Evandro como dono |
 | **Bola de Neve** | Estratégia de dívidas: menor primeiro, nunca renegociar |
 
 ---
 
-## 21. Changelog
+## 24. Changelog
 
 | Versão | Data | Decisão |
 |---|---|---|
 | 1.0.0 | Anterior | `obra_id` como entidade central |
 | 1.0.0 | Anterior | ImgBB para fotos — base64 colapsou localStorage |
 | 1.1.0 | Anterior | Zero try/catch silenciosos |
+| 1.1.0 | Anterior | Módulos máx 400 linhas em `assets/modulos/` |
 | 2.0.0 | 31/03/2026 | Brain com escrita no Supabase |
 | 2.0.0 | 31/03/2026 | Proposta em HTML Berti — Gamma descartado |
-| 2.0.0 | 31/03/2026 | Contrato como gatilho de onboarding |
-| 2.0.0 | 31/03/2026 | SINAPI como base secundária |
-| 3.0.0 | 31/03/2026 | SLA dos agentes definido |
-| 3.0.0 | 31/03/2026 | Anti-padrões documentados com contexto real |
-| 3.0.0 | 31/03/2026 | Glossário e mapa de resiliência criados |
+| 3.0.0 | 31/03/2026 | SLA dos agentes · Anti-padrões · Glossário |
 | 3.1.0 | 01/04/2026 | Token hardcoded → localStorage obrigatório |
-| 3.1.0 | 01/04/2026 | Schema real Supabase auditado — 12+ tabelas |
-| 3.1.0 | 01/04/2026 | Módulos deka-os reconstruídos (hub, deka.js) |
+| 4.0.0 | 01/04/2026 | MASTER unificado — v3.0 + v3.1 + decisões do dia |
+| 4.0.0 | 01/04/2026 | Ouro Berti: `#9A7B3A` · Verde Berti: `#1A3A2A` |
+| 4.0.0 | 01/04/2026 | Limite geral: 3.000 linhas · Shell obra.html: 5.000 |
+| 4.0.0 | 01/04/2026 | Estrutura: hub.html → obra.html shell 9 tabs com lazy loading |
+| 4.0.0 | 01/04/2026 | 9 módulos detalhados com wireframes em texto |
+| 4.0.0 | 01/04/2026 | Conflito single-file vs modular resolvido: modular prevalece |
 
 ---
 
 ```
-DEKA OS — MASTER.md v3.1.0
+DEKA OS — MASTER.md v4.0.0 — Unificado
 Berti Construtora LTDA · Confidencial
 Última atualização: 01/04/2026
 ```
