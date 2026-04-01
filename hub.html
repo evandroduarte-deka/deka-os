@@ -768,6 +768,25 @@
       .hub-topbar__pagina { display: block; }
     }
 
+    .hub-topbar__link {
+      font-size:      0.8125rem;
+      color:          var(--cor-texto-secundario);
+      text-decoration:none;
+      padding:        0.4rem 0.75rem;
+      border-radius:  var(--radius-sm);
+      transition:     all var(--transicao-padrao);
+      display:        none;
+    }
+
+    .hub-topbar__link:hover {
+      color:      var(--cor-acento);
+      background: var(--cor-acento-suave);
+    }
+
+    @media (min-width: 640px) {
+      .hub-topbar__link { display: block; }
+    }
+
     .hub-topbar__espaco { flex: 1; }
 
     /* ═══════════════════════════════════════════════════════════════════════
@@ -803,6 +822,9 @@
 
     <div class="hub-topbar__separador" aria-hidden="true"></div>
     <span class="hub-topbar__pagina" aria-current="page">Hub de Obras</span>
+    <a href="financeiro.html" class="hub-topbar__link" title="Ir para o módulo Financeiro">
+      💰 Financeiro
+    </a>
     <div class="hub-topbar__espaco"></div>
 
     <!-- Controle de tema: sem JS inline — atributo data-tema no <html> -->
