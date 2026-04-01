@@ -18,8 +18,14 @@ CREATE TABLE IF NOT EXISTS obra_servicos (
   descricao_cliente text NOT NULL,
   equipe_codigo text NOT NULL,
   percentual_concluido numeric NOT NULL DEFAULT 0 CHECK (percentual_concluido >= 0 AND percentual_concluido <= 100),
+  pct_anterior numeric DEFAULT 0 CHECK (pct_anterior >= 0 AND pct_anterior <= 100),
   valor_contratado numeric NOT NULL DEFAULT 0,
-  created_at timestamptz NOT NULL DEFAULT now()
+  dias_marcados jsonb DEFAULT '[]'::jsonb,
+  data_inicio date,
+  data_fim date,
+  status text DEFAULT 'A EXECUTAR' CHECK (status IN ('A EXECUTAR','EM ANDAMENTO','CONCLUÍDO','PAUSADO','AGUARDANDO')),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
 );
 
 -- Índices para performance
