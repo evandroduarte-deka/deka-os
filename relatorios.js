@@ -39,6 +39,7 @@ import {
 
 const CACHE_TTL_OBRAS_MIN = 15;
 const CACHE_KEY_OBRAS = 'deka_cache_v2_obras_ativas';
+const TEMPLATE_HTML_PATH = './relatorio-cliente-template.html';
 
 const SYSTEM_PROMPT_AGT_RELATORIO = `
 Você é o AGT_RELATORIO da Berti Construtora.
@@ -106,6 +107,7 @@ const Estado = {
   obrasGrid: null,
   obraChip: null,
   btnGerarRelatorio: null,
+  btnPreviaHtml: null,
   step1: null,
   step2: null,
   step3: null,
@@ -119,6 +121,7 @@ const Estado = {
   // Dados
   obraSelecionada: null,
   relatorioGerado: null,
+  dadosConsolidados: null,
 };
 
 // =============================================================================
@@ -142,6 +145,7 @@ function carregarElementosDOM() {
   Estado.obrasGrid = document.getElementById('obras-grid');
   Estado.obraChip = document.getElementById('obra-selecionada-chip');
   Estado.btnGerarRelatorio = document.getElementById('btn-gerar-relatorio');
+  Estado.btnPreviaHtml = document.getElementById('btn-previa-html');
   Estado.step1 = document.getElementById('step-1');
   Estado.step2 = document.getElementById('step-2');
   Estado.step3 = document.getElementById('step-3');
@@ -173,11 +177,13 @@ function configurarEventListeners() {
     Estado.obraChip.textContent = Estado.obraSelecionada.nome;
     Estado.obraChip.style.display = 'inline-block';
 
-    // Habilita botão gerar
+    // Habilita botões
     Estado.btnGerarRelatorio.disabled = false;
+    Estado.btnPreviaHtml.disabled = false;
   });
 
   Estado.btnGerarRelatorio.addEventListener('click', gerarRelatorio);
+  Estado.btnPreviaHtml.addEventListener('click', gerarPreviaHTML);
   Estado.btnCopiar.addEventListener('click', copiarParaClipboard);
   Estado.btnNovo.addEventListener('click', resetarUI);
 }
@@ -429,6 +435,411 @@ LEMBRE-SE:
 }
 
 // =============================================================================
+// GERAÇÃO DE PRÉVIA HTML
+// =============================================================================
+
+/**
+ * Gera prévia HTML completa do relatório em nova janela.
+ */
+async function gerarPreviaHTML() {
+  if (!Estado.obraSelecionada) {
+    showToast('Selecione uma obra primeiro.', 'warning');
+    return;
+  }
+
+  try {
+    Estado.btnPreviaHtml.disabled = true;
+    Estado.btnPreviaHtml.textContent = '⏳ Gerando prévia...';
+
+    // Valida datas
+    const dataInicioStr = Estado.dataInicio.value;
+    const dataFimStr = Estado.dataFim.value;
+
+    if (!dataInicioStr || !dataFimStr) {
+      showToast('Preencha as datas de início e fim.', 'warning');
+      return;
+    }
+
+    const dataInicioDate = new Date(dataInicioStr);
+    const dataFimDate = new Date(dataFimStr);
+
+    if (dataFimDate < dataInicioDate) {
+      showToast('Data fim deve ser posterior à data início.', 'warning');
+      return;
+    }
+
+    showToast('Carregando template HTML...', 'info');
+
+    // 1. Carrega template HTML
+    const response = await fetchComTimeout(TEMPLATE_HTML_PATH, {}, 15000);
+    const templateHtml = await response.text();
+
+    showToast('Consolidando dados...', 'info');
+
+    // 2. Monta dados consolidados
+    const dados = await montarDadosRelatorio(
+      Estado.obraSelecionada.id,
+      dataInicioStr,
+      dataFimStr
+    );
+
+    // Guarda dados consolidados para uso futuro
+    Estado.dadosConsolidados = dados;
+
+    showToast('Gerando HTML...', 'info');
+
+    // 3. Gera HTML completo
+    const htmlCompleto = gerarHTMLRelatorio(dados, templateHtml);
+
+    // 4. Abre em nova janela
+    const novaJanela = window.open('', '_blank');
+    if (novaJanela) {
+      novaJanela.document.write(htmlCompleto);
+      novaJanela.document.close();
+      showToast('Prévia HTML aberta em nova aba!', 'success');
+      console.log('[DEKA][Relatorios] Prévia HTML gerada.');
+    } else {
+      showToast('Não foi possível abrir nova janela. Verifique bloqueador de pop-ups.', 'warning');
+    }
+
+  } catch (erro) {
+    console.error('[DEKA][Relatorios] Erro ao gerar prévia HTML:', erro);
+    showToast(erro.message || 'Erro ao gerar prévia HTML.', 'error');
+  } finally {
+    Estado.btnPreviaHtml.disabled = false;
+    Estado.btnPreviaHtml.textContent = '👁️ Prévia HTML';
+  }
+}
+
+// =============================================================================
+// MONTAGEM DE DADOS CONSOLIDADOS
+// =============================================================================
+
+/**
+ * Consolida todos os dados necessários para o relatório HTML.
+ * @param {string} obraId - UUID da obra
+ * @param {string} dataInicio - Data início no formato YYYY-MM-DD
+ * @param {string} dataFim - Data fim no formato YYYY-MM-DD
+ * @returns {Promise<Object>} Dados consolidados
+ */
+async function montarDadosRelatorio(obraId, dataInicio, dataFim) {
+  try {
+    // Busca paralela de todos os dados
+    const [obra, servicos, visitas, pendencias, fotos, compras, snapshotAnterior] = await Promise.all([
+      buscarObra(obraId),
+      buscarServicos(obraId),
+      buscarVisitas(obraId, dataInicio, dataFim),
+      buscarPendencias(obraId),
+      buscarFotosGracioso(obraId, dataInicio, dataFim),
+      buscarComprasGracioso(obraId, dataInicio, dataFim),
+      buscarSnapshotAnteriorGracioso(obraId, dataInicio),
+    ]);
+
+    // Calcula número da semana
+    const semanaNumero = calcularNumeroSemana(dataInicio);
+
+    // Monta objeto consolidado
+    return {
+      obra,
+      servicos,
+      visitas,
+      pendencias,
+      fotos: fotos || [],
+      compras: compras || [],
+      snapshotAnterior: snapshotAnterior || null,
+      periodo: { inicio: dataInicio, fim: dataFim },
+      semanaNumero,
+    };
+
+  } catch (erro) {
+    console.error('[DEKA][Relatorios] Erro ao montar dados:', erro);
+    throw new Error('Falha ao consolidar dados do relatório: ' + erro.message);
+  }
+}
+
+/**
+ * Busca fotos com fallback gracioso (não quebra se tabela não existir).
+ */
+async function buscarFotosGracioso(obraId, dataInicio, dataFim) {
+  try {
+    const { data, error } = await supabase
+      .from('obra_fotos')
+      .select('*')
+      .eq('obra_id', obraId)
+      .gte('data', dataInicio)
+      .lte('data', dataFim);
+
+    if (error) {
+      // Se erro for "relation does not exist", retorna null graciosamente
+      if (error.message.includes('does not exist') || error.code === '42P01') {
+        console.warn('[DEKA][Relatorios] Tabela obra_fotos não existe ainda. Continuando sem fotos.');
+        return null;
+      }
+      throw error;
+    }
+
+    return data || [];
+  } catch (erro) {
+    console.warn('[DEKA][Relatorios] Erro ao buscar fotos (continuando):', erro.message);
+    return null;
+  }
+}
+
+/**
+ * Busca compras com fallback gracioso (não quebra se tabela não existir).
+ */
+async function buscarComprasGracioso(obraId, dataInicio, dataFim) {
+  try {
+    const { data, error } = await supabase
+      .from('obra_compras')
+      .select('*')
+      .eq('obra_id', obraId)
+      .gte('data', dataInicio)
+      .lte('data', dataFim);
+
+    if (error) {
+      // Se erro for "relation does not exist", retorna null graciosamente
+      if (error.message.includes('does not exist') || error.code === '42P01') {
+        console.warn('[DEKA][Relatorios] Tabela obra_compras não existe ainda. Continuando sem compras.');
+        return null;
+      }
+      throw error;
+    }
+
+    return data || [];
+  } catch (erro) {
+    console.warn('[DEKA][Relatorios] Erro ao buscar compras (continuando):', erro.message);
+    return null;
+  }
+}
+
+/**
+ * Busca snapshot anterior com fallback gracioso.
+ */
+async function buscarSnapshotAnteriorGracioso(obraId, dataInicio) {
+  try {
+    const { data, error } = await supabase
+      .from('obra_snapshots')
+      .select('*')
+      .eq('obra_id', obraId)
+      .lt('semana', dataInicio)
+      .order('semana', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error) {
+      if (error.message.includes('does not exist') || error.code === '42P01' || error.code === 'PGRST116') {
+        console.warn('[DEKA][Relatorios] Tabela obra_snapshots não existe ou sem snapshot anterior.');
+        return null;
+      }
+      throw error;
+    }
+
+    return data;
+  } catch (erro) {
+    console.warn('[DEKA][Relatorios] Erro ao buscar snapshot anterior (continuando):', erro.message);
+    return null;
+  }
+}
+
+/**
+ * Calcula o número da semana do ano.
+ */
+function calcularNumeroSemana(dataStr) {
+  const data = new Date(dataStr);
+  const inicioAno = new Date(data.getFullYear(), 0, 1);
+  const diasPassados = Math.floor((data - inicioAno) / (24 * 60 * 60 * 1000));
+  return Math.ceil((diasPassados + inicioAno.getDay() + 1) / 7);
+}
+
+// =============================================================================
+// GERAÇÃO DE HTML A PARTIR DO TEMPLATE
+// =============================================================================
+
+/**
+ * Gera o HTML do relatório substituindo placeholders no template.
+ * @param {Object} dados - Dados consolidados da obra
+ * @param {string} templateHtml - HTML do template com placeholders
+ * @returns {string} HTML completo pronto para envio
+ */
+function gerarHTMLRelatorio(dados, templateHtml) {
+  let html = templateHtml;
+
+  // Substitui dados básicos
+  html = html.replace(/\{\{NOME_OBRA\}\}/g, dados.obra.nome || 'Obra sem nome');
+  html = html.replace(/\{\{NOME_CLIENTE\}\}/g, dados.obra.cliente || 'Cliente não informado');
+  html = html.replace(/\{\{PERIODO_INICIO\}\}/g, formatarDataBR(dados.periodo.inicio));
+  html = html.replace(/\{\{PERIODO_FIM\}\}/g, formatarDataBR(dados.periodo.fim));
+  html = html.replace(/\{\{SEMANA_NUMERO\}\}/g, dados.semanaNumero.toString());
+  html = html.replace(/\{\{PERCENTUAL_ATUAL\}\}/g, (dados.obra.percentual_global || 0).toString());
+  html = html.replace(/\{\{DATA_GERACAO\}\}/g, formatarDataBR(new Date().toISOString().split('T')[0]));
+
+  // Percentual anterior (comparativo)
+  const percentualAnterior = dados.snapshotAnterior?.pct_geral || null;
+  let textoComparativo = '';
+  if (percentualAnterior !== null) {
+    const diff = (dados.obra.percentual_global || 0) - percentualAnterior;
+    if (diff > 0) {
+      textoComparativo = `Avanço de ${diff.toFixed(1)}% em relação à semana anterior`;
+    } else if (diff === 0) {
+      textoComparativo = 'Mantido em relação à semana anterior';
+    } else {
+      textoComparativo = '';
+    }
+  }
+  html = html.replace(/\{\{PERCENTUAL_ANTERIOR\}\}/g, textoComparativo);
+
+  // Lista de serviços realizados
+  const servicosHtml = gerarListaServicosHTML(dados.servicos, dados.visitas);
+  html = html.replace(/\{\{LISTA_SERVICOS_HTML\}\}/g, servicosHtml);
+
+  // Grid de fotos
+  const fotosHtml = gerarGridFotosHTML(dados.fotos);
+  html = html.replace(/\{\{GRID_FOTOS_HTML\}\}/g, fotosHtml);
+
+  // Lista de compras
+  const comprasHtml = gerarListaComprasHTML(dados.compras);
+  html = html.replace(/\{\{LISTA_COMPRAS_HTML\}\}/g, comprasHtml);
+
+  // Lista de pendências
+  const pendenciasHtml = gerarListaPendenciasHTML(dados.pendencias);
+  html = html.replace(/\{\{LISTA_PENDENCIAS_HTML\}\}/g, pendenciasHtml);
+
+  // Próximos passos (baseado em serviços com baixo percentual)
+  const proximosHtml = gerarProximosPassosHTML(dados.servicos);
+  html = html.replace(/\{\{LISTA_PROXIMOS_PASSOS_HTML\}\}/g, proximosHtml);
+
+  return html;
+}
+
+function gerarListaServicosHTML(servicos, visitas) {
+  // Filtra serviços com progresso > 0 e ordena por percentual decrescente
+  const servicosComProgresso = servicos.filter((s) => (s.percentual_concluido || 0) > 0);
+
+  if (servicosComProgresso.length === 0) {
+    return '<p class="empty-state">Nenhum serviço executado no período.</p>';
+  }
+
+  const itens = servicosComProgresso
+    .sort((a, b) => (b.percentual_concluido || 0) - (a.percentual_concluido || 0))
+    .slice(0, 8) // Máximo 8 itens
+    .map((s) => {
+      const descricao = s.descricao_cliente || s.descricao_interna || 'Serviço sem descrição';
+      const percentual = s.percentual_concluido || 0;
+      const status = percentual >= 100 ? '(concluído)' : `(${percentual}%)`;
+      return `<li>Foram executados os serviços de ${descricao} ${status}</li>`;
+    })
+    .join('\n');
+
+  return `<ul>${itens}</ul>`;
+}
+
+function gerarGridFotosHTML(fotos) {
+  if (!fotos || fotos.length === 0) {
+    return '<p class="empty-state">Registro fotográfico em breve.</p>';
+  }
+
+  // Máximo 6 fotos
+  const fotosLimitadas = fotos.slice(0, 6);
+
+  return fotosLimitadas
+    .map((foto) => {
+      const url = foto.url || '';
+      const legenda = foto.descricao || 'Registro da obra';
+      return `
+        <div class="foto-item">
+          <img src="${url}" alt="${legenda}">
+          <div class="foto-legenda">${legenda}</div>
+        </div>
+      `;
+    })
+    .join('\n');
+}
+
+function gerarListaComprasHTML(compras) {
+  if (!compras || compras.length === 0) {
+    return '<p class="empty-state">Nenhuma compra registrada no período.</p>';
+  }
+
+  // Agrupa por categoria
+  const comprasPorCategoria = compras.reduce((acc, compra) => {
+    const cat = compra.categoria || 'Outros';
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(compra);
+    return acc;
+  }, {});
+
+  return Object.entries(comprasPorCategoria)
+    .map(([categoria, itens]) => {
+      const listaItens = itens
+        .map((item) => item.descricao || 'Item sem descrição')
+        .join(', ');
+      return `
+        <div class="material-item">
+          <div class="material-categoria">${categoria}</div>
+          <div class="material-descricao">${listaItens}</div>
+        </div>
+      `;
+    })
+    .join('\n');
+}
+
+function gerarListaPendenciasHTML(pendencias) {
+  if (pendencias.length === 0) {
+    return '<p class="empty-state">Nenhuma pendência no momento. Obra em andamento normal.</p>';
+  }
+
+  // Filtra apenas pendências relevantes para o cliente (prioridades alta e crítica)
+  const pendenciasRelevantes = pendencias.filter(
+    (p) => p.prioridade === 'alta' || p.prioridade === 'critica'
+  );
+
+  if (pendenciasRelevantes.length === 0) {
+    return '<p class="empty-state">Nenhuma pendência no momento. Obra em andamento normal.</p>';
+  }
+
+  return pendenciasRelevantes
+    .slice(0, 3) // Máximo 3 pendências
+    .map((p) => {
+      const descricao = p.descricao || 'Pendência sem descrição';
+      // Sempre apresentar solução junto (fictícia se não houver no banco)
+      const solucao = 'Nossa equipe está trabalhando na resolução e acompanhando de perto.';
+      return `
+        <div class="pendencia-item">
+          <div class="pendencia-titulo">${descricao}</div>
+          <div class="pendencia-solucao">${solucao}</div>
+        </div>
+      `;
+    })
+    .join('\n');
+}
+
+function gerarProximosPassosHTML(servicos) {
+  // Filtra serviços com percentual < 100 e ordena por percentual decrescente
+  const servicosPendentes = servicos
+    .filter((s) => (s.percentual_concluido || 0) < 100)
+    .sort((a, b) => (b.percentual_concluido || 0) - (a.percentual_concluido || 0))
+    .slice(0, 4); // Máximo 4 próximos passos
+
+  if (servicosPendentes.length === 0) {
+    return '<li>Finalização e entrega da obra</li>';
+  }
+
+  return servicosPendentes
+    .map((s) => {
+      const descricao = s.descricao_cliente || s.descricao_interna || 'Serviço';
+      return `<li>Continuidade dos serviços de ${descricao}</li>`;
+    })
+    .join('\n');
+}
+
+function formatarDataBR(dataStr) {
+  if (!dataStr) return '';
+  const [ano, mes, dia] = dataStr.split('-');
+  return `${dia}/${mes}/${ano}`;
+}
+
+// =============================================================================
 // RENDERIZAÇÃO DO PREVIEW
 // =============================================================================
 
@@ -494,8 +905,12 @@ function resetarUI() {
 
   // Desabilita botões
   Estado.btnGerarRelatorio.disabled = true;
+  Estado.btnPreviaHtml.disabled = true;
   Estado.btnCopiar.disabled = true;
   Estado.btnNovo.disabled = true;
+
+  // Limpa dados consolidados
+  Estado.dadosConsolidados = null;
 
   console.log('[DEKA][Relatorios] UI resetada.');
 }
