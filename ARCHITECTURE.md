@@ -346,6 +346,130 @@ Itens individuais de uma proposta. FK referencia `base_servicos`.
 
 ---
 
+### Tabela: `clientes`
+CRM — dados completos de clientes. Populada ao fechamento do contrato.
+
+> ⚠️ Schema não auditado via REST (tabela vazia). Campos baseados no MASTER.md.
+> Verificar no Supabase Dashboard antes de escrever código que grave nesta tabela.
+
+| Campo esperado | Tipo | Descrição |
+|---|---|---|
+| `id` | `uuid` | Chave primária |
+| `nome` | `text` | Nome ou razão social |
+| `cpf_cnpj` | `text` | CPF ou CNPJ |
+| `contato` | `text` | Telefone / WhatsApp |
+| `email` | `text` | E-mail |
+| `historico` | `jsonb` | Histórico de relacionamento |
+| `created_at` | `timestamptz` | Criação automática |
+
+---
+
+### Tabela: `contratos`
+Contratos gerados ao fechamento — gatilho de entrada no ecossistema.
+
+> ⚠️ Schema não auditado via REST (tabela vazia). Verificar antes de usar.
+
+| Campo esperado | Tipo | Descrição |
+|---|---|---|
+| `id` | `uuid` | Chave primária |
+| `obra_id` | `uuid` | FK → `obras.id` |
+| `cliente_id` | `uuid` | FK → `clientes.id` |
+| `tipo` | `text` | `cliente` \| `equipe` \| `subempreiteiro` |
+| `status` | `text` | `rascunho` \| `assinado` \| `encerrado` |
+| `data` | `date` | Data de assinatura |
+| `created_at` | `timestamptz` | Criação automática |
+
+---
+
+### Tabela: `financeiro`
+Lançamentos financeiros vinculados às obras (receitas e despesas por obra).
+
+> ⚠️ Schema não auditado via REST (tabela vazia). Verificar antes de usar.
+
+| Campo esperado | Tipo | Descrição |
+|---|---|---|
+| `id` | `uuid` | Chave primária |
+| `obra_id` | `uuid` | FK → `obras.id` |
+| `tipo` | `text` | `receita` \| `despesa` |
+| `valor` | `numeric` | Valor em R$ |
+| `categoria` | `text` | Categoria do lançamento |
+| `data` | `date` | Data do lançamento |
+| `status` | `text` | `pendente` \| `confirmado` \| `revisao` |
+| `descricao` | `text` | Descrição do lançamento |
+| `created_at` | `timestamptz` | Criação automática |
+
+---
+
+### Tabela: `financeiro_empresa`
+Despesas fixas da Berti Construtora (não vinculadas a obra específica).
+
+> ⚠️ Schema não auditado via REST (tabela vazia). Verificar antes de usar.
+
+| Campo esperado | Tipo | Descrição |
+|---|---|---|
+| `id` | `uuid` | Chave primária |
+| `categoria` | `text` | Categoria da despesa |
+| `valor` | `numeric` | Valor em R$ |
+| `data` | `date` | Data do lançamento |
+| `descricao` | `text` | Descrição |
+| `created_at` | `timestamptz` | Criação automática |
+
+---
+
+### Tabela: `obra_compras`
+Compras de material por obra — fecha o loop entre orçado e gasto real.
+
+> ⚠️ Schema não auditado via REST (tabela vazia). Verificar antes de usar.
+
+| Campo esperado | Tipo | Descrição |
+|---|---|---|
+| `id` | `uuid` | Chave primária |
+| `obra_id` | `uuid` | FK → `obras.id` |
+| `data` | `date` | Data da compra |
+| `descricao` | `text` | O que foi comprado |
+| `quantidade` | `numeric` | Quantidade |
+| `valor_total` | `numeric` | Valor total pago (R$) |
+| `fornecedor` | `text` | Nome do fornecedor |
+| `categoria` | `text` | Categoria do material |
+| `nota_fiscal` | `text` | NF ou cupom (opcional) |
+| `origem` | `text` | `telegram` \| `cockpit` \| `manual` |
+| `created_at` | `timestamptz` | Criação automática |
+
+---
+
+### Tabela: `oportunidades`
+Funil comercial — leads e oportunidades de venda.
+
+> ⚠️ Schema não auditado via REST (tabela vazia). Verificar antes de usar.
+
+| Campo esperado | Tipo | Descrição |
+|---|---|---|
+| `id` | `uuid` | Chave primária |
+| `cliente_id` | `uuid` | FK → `clientes.id` (nullable pré-fechamento) |
+| `valor` | `numeric` | Valor estimado da oportunidade |
+| `etapa` | `text` | `lead` \| `qualificado` \| `proposta` \| `negociacao` \| `fechado` \| `perdido` |
+| `data` | `date` | Data de abertura |
+| `responsavel` | `text` | Responsável pelo acompanhamento |
+| `created_at` | `timestamptz` | Criação automática |
+
+---
+
+### Tabela: `obra_snapshots`
+Histórico semanal de progresso por obra — base para gráficos de evolução.
+
+> ⚠️ Schema não auditado via REST (tabela vazia). Verificar antes de usar.
+
+| Campo esperado | Tipo | Descrição |
+|---|---|---|
+| `id` | `uuid` | Chave primária |
+| `obra_id` | `uuid` | FK → `obras.id` |
+| `semana` | `integer` | Número da semana |
+| `pct_geral` | `numeric` | Percentual geral naquele snapshot |
+| `observacoes` | `text` | Observações da semana |
+| `created_at` | `timestamptz` | Criação automática |
+
+---
+
 ## 4. Tabelas que NÃO existem (proibido criar ou referenciar)
 
 | Tabela | Motivo |
