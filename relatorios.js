@@ -98,11 +98,15 @@ const Estado = {
   btnImprimir: null,
   btnCopiar: null,
   btnNovo: null,
+  btnAbrirBerti: null,
 
   // Dados
   obraSelecionada: null,
   relatorioMd: null,
   relatorioData: null,
+  relatorioGerado: null,
+  dataInicio: null,
+  dataFim: null,
 };
 
 // =============================================================================
@@ -134,6 +138,7 @@ function _carregarDOM() {
   Estado.btnImprimir = document.getElementById('btn-imprimir');
   Estado.btnCopiar = document.getElementById('btn-copiar');
   Estado.btnNovo = document.getElementById('btn-novo');
+  Estado.btnAbrirBerti = document.getElementById('btn-abrir-berti');
 }
 
 function _configurarEventos() {
@@ -162,6 +167,7 @@ function _configurarEventos() {
   Estado.btnImprimir.addEventListener('click', _imprimirRelatorio);
   Estado.btnCopiar.addEventListener('click', _copiarTexto);
   Estado.btnNovo.addEventListener('click', _resetUI);
+  Estado.btnAbrirBerti.addEventListener('click', abrirRelatorioBerti);
 }
 
 // =============================================================================
@@ -243,6 +249,8 @@ async function _gerarRelatorio() {
     // STEP 1: Calcular período
     _ativarStep(Estado.step1);
     const { dataInicio, dataFim } = _calcularPeriodo();
+    Estado.dataInicio = dataInicio;
+    Estado.dataFim = dataFim;
     _concluirStep(Estado.step1);
 
     // STEP 2: Buscar dados
@@ -267,6 +275,7 @@ async function _gerarRelatorio() {
 
     // Armazenar dados para exportação
     Estado.relatorioMd = relatorioMd;
+    Estado.relatorioGerado = relatorioMd;
     Estado.relatorioData = { ...dados, dataInicio, dataFim };
 
     // Habilitar botões de ação
@@ -274,6 +283,7 @@ async function _gerarRelatorio() {
     Estado.btnImprimir.disabled = false;
     Estado.btnCopiar.disabled = false;
     Estado.btnNovo.disabled = false;
+    if (Estado.btnAbrirBerti) Estado.btnAbrirBerti.disabled = false;
 
     showToast('✅ Relatório gerado com sucesso!', 'success');
 
@@ -704,6 +714,7 @@ function _resetUI() {
   Estado.btnImprimir.disabled = true;
   Estado.btnCopiar.disabled = true;
   Estado.btnNovo.disabled = true;
+  if (Estado.btnAbrirBerti) Estado.btnAbrirBerti.disabled = true;
 
   _resetSteps();
 
@@ -746,6 +757,140 @@ function _slugify(texto) {
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
+}
+
+// =============================================================================
+// ABRIR RELATÓRIO BERTI
+// =============================================================================
+
+function calcularNumeroSemana(dataStr) {
+  const d = new Date(dataStr);
+  const inicio = new Date(d.getFullYear(), 0, 1);
+  return Math.ceil(((d - inicio) / 86400000 + inicio.getDay() + 1) / 7);
+}
+
+function extrairProximosPassos(textoMd) {
+  const linhas = textoMd.split('\n');
+  const passos = [];
+  let capturando = false;
+  for (const linha of linhas) {
+    if (linha.includes('próxima semana') || linha.includes('Próxima semana')) {
+      capturando = true;
+      continue;
+    }
+    if (capturando && linha.startsWith('##')) break;
+    if (capturando && linha.startsWith('-')) {
+      const txt = linha.replace(/^-\s*/, '').trim();
+      if (txt) passos.push(txt);
+    }
+  }
+  return passos.slice(0, 5);
+}
+
+function montarRelatorioData(obra, dadosObra, textoIA, dataInicio, dataFim) {
+  const servicos = dadosObra.servicos || [];
+  const concluidos = servicos.filter(s => s.percentual_concluido === 100).length;
+  const emAndamento = servicos.filter(s =>
+    s.percentual_concluido > 0 && s.percentual_concluido < 100
+  ).length;
+
+  const statusPrazo = servicos.some(s => s.status_prazo === 'critico') ? 'critico'
+    : servicos.some(s => s.status_prazo === 'atencao') ? 'atencao' : 'ok';
+
+  const fmt = (d) => d ? new Date(d).toLocaleDateString('pt-BR') : '—';
+
+  return {
+    semana: calcularNumeroSemana(dataInicio),
+    periodoInicio: fmt(dataInicio),
+    periodoFim: fmt(dataFim),
+    dataGeracao: new Date().toLocaleDateString('pt-BR'),
+    obra: {
+      nome: obra.nome,
+      endereco: obra.endereco || '',
+      cliente: obra.cliente,
+      percentualGeral: obra.percentual_global || 0,
+      entregaPrevista: fmt(obra.data_previsao_fim),
+      statusPrazo,
+    },
+    kpis: { concluidos, emAndamento },
+    resumo: textoIA,
+    servicos: servicos.map(s => ({
+      descricao: s.descricao_cliente,
+      local: s.local || '—',
+      status: s.percentual_concluido === 100 ? 'concluido'
+        : s.percentual_concluido > 0 ? 'em_andamento'
+        : s.dias_atraso > 0 ? 'atrasado' : 'a_executar',
+      percentual: s.percentual_concluido || 0,
+    })),
+    fotos: (dadosObra.fotos || []).map(f => ({
+      url: f.url,
+      data: fmt(f.created_at),
+      legenda: f.descricao || '',
+    })),
+    proximosPassos: extrairProximosPassos(textoIA),
+  };
+}
+
+async function abrirRelatorioBerti() {
+  if (!Estado.relatorioGerado || !Estado.obraSelecionada) {
+    showToast('Gere o relatório antes de abrir.', 'warning');
+    return;
+  }
+
+  try {
+    showToast('Montando relatório...', 'info');
+
+    // Busca dados completos da obra
+    const [obraData, servicosData, fotosData] = await Promise.all([
+      supabase.from('obras')
+        .select('id, nome, cliente, endereco, percentual_global, data_previsao_fim')
+        .eq('id', Estado.obraSelecionada.id).single()
+        .then(r => { if (r.error) throw r.error; return r.data; }),
+
+      supabase.from('obra_servicos')
+        .select('id, descricao_cliente, percentual_concluido, dias_atraso, status_prazo')
+        .eq('obra_id', Estado.obraSelecionada.id)
+        .then(r => r.data || []),
+
+      supabase.from('obra_fotos')
+        .select('url, descricao, created_at')
+        .eq('obra_id', Estado.obraSelecionada.id)
+        .order('created_at', { ascending: false })
+        .limit(6)
+        .then(r => r.data || [])
+        .catch(() => []), // fallback gracioso se tabela não existir ainda
+    ]);
+
+    const dadosObra = { servicos: servicosData, fotos: fotosData };
+
+    const relatorioData = montarRelatorioData(
+      obraData,
+      dadosObra,
+      Estado.relatorioGerado,
+      Estado.dataInicio,
+      Estado.dataFim
+    );
+
+    // Carrega o template e injeta os dados
+    const templateRes = await fetch('./relatorio-pdf.html');
+    if (!templateRes.ok) throw new Error('Erro ao carregar template relatorio-pdf.html');
+    const templateHtml = await templateRes.text();
+
+    const htmlFinal = templateHtml.replace(
+      '// window.RELATORIO_DATA = { ... }',
+      'window.RELATORIO_DATA = ' + JSON.stringify(relatorioData, null, 2) + ';'
+    );
+
+    const blob = new Blob([htmlFinal], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+
+    showToast('Relatório aberto em nova aba.', 'success');
+
+  } catch (erro) {
+    console.error('[DEKA][Relatorios] Erro ao abrir relatório Berti:', erro);
+    showToast('Erro ao abrir relatório: ' + erro.message, 'error');
+  }
 }
 
 // =============================================================================
