@@ -1,5 +1,0 @@
-# Redirect root to hub
-/  /hub.html  200
-
-# All other paths serve as-is
-/*  /:splat  200
